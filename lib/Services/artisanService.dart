@@ -1,9 +1,9 @@
-// lib/services/artisanService.dart
+
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
-import '../model/artisanModel.dart'; // Pastikan path model artisan sudah benar
+import '../model/artisanModel.dart'; 
 import 'auth_manager.dart';
 
 class ArtisanService {
