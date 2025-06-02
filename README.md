@@ -94,15 +94,7 @@ Aplikasi mobile ArtisanHub adalah platform inovatif yang bertujuan untuk menghub
 
 Aplikasi ini berinteraksi dengan API backend yang sudah di-deploy.
 
-* **URL Backend API**:
-    URL dasar API sudah dikonfigurasi di `lib/config/api_config.dart`.
-    ```dart
-    // lib/config/api_config.dart
-    class ApiConfig {
-      static const String baseUrl = '[https://backendartisanhub-130852023885.asia-southeast2.run.app/api](https://backendartisanhub-130852023885.asia-southeast2.run.app/api)';
-      static const String baseAuthUrl = '[https://backendartisanhub-130852023885.asia-southeast2.run.app/api/auth](https://backendartisanhub-130852023885.asia-southeast2.run.app/api/auth)';
-    }
-    ```
+
     Jika URL backend Anda berubah atau Anda ingin menggunakan instance lokal, perbarui nilai-nilai ini.
 
 * **Package Name untuk OpenStreetMap**:
