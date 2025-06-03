@@ -1,9 +1,9 @@
-// lib/models/artisan.dart
+
 
 import 'userModel.dart';
 import 'package:latlong2/latlong.dart';
 
-// Re-defining LocationPoint as it's used within artisan
+
 class LocationPoint {
   String? type;
   List<double>? coordinates;

@@ -1,8 +1,8 @@
-// lib/screens/events_screen.dart
+
 
 import 'package:flutter/material.dart';
-import '../services/eventService.dart'; // Pastikan path benar
-import '../model/eventModel.dart'; // Pastikan path model EventModel sudah benar
+import '../services/eventService.dart'; 
+import '../model/eventModel.dart';
 
 class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
@@ -64,7 +64,7 @@ class _EventsScreenState extends State<EventsScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              // TODO: Implementasi navigasi ke halaman tambah acara baru
+             
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Fitur tambah acara belum diimplementasikan.')),
               );
@@ -104,7 +104,7 @@ class _EventsScreenState extends State<EventsScreen> {
                                 IconButton(
                                   icon: const Icon(Icons.edit, color: Colors.blue),
                                   onPressed: () {
-                                    // TODO: Implementasi edit acara
+                                    
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(content: Text('Edit acara: ${event.name}')),
                                     );
@@ -149,7 +149,7 @@ class _EventsScreenState extends State<EventsScreen> {
                               ],
                             ),
                             onTap: () {
-                              // TODO: Implementasi detail acara
+                             
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Lihat detail acara: ${event.name}')),
                               );

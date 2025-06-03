@@ -8,7 +8,7 @@ class User {
   String? profile_picture_url;
   DateTime? created_at;
   DateTime? updated_at;
-  String? password_hash; // Note: In a real app, never directly expose or pass password_hash
+  String? password_hash; 
 
   User({
     this.id,
@@ -23,7 +23,7 @@ class User {
     this.password_hash,
   });
 
-  // Factory constructor for creating a User instance from JSON
+  
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] as int?,
@@ -39,13 +39,12 @@ class User {
       updated_at: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
           : null,
-      // For security, you might choose NOT to deserialize password_hash
-      // into the client-side User object unless specifically needed for hashing on the client.
+      
       password_hash: json['password_hash'] as String?,
     );
   }
 
-  // Method to convert a User instance to JSON
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -57,8 +56,6 @@ class User {
       'profile_picture_url': profile_picture_url,
       'created_at': created_at?.toIso8601String(), // Convert DateTime to ISO 8601 string
       'updated_at': updated_at?.toIso8601String(), // Convert DateTime to ISO 8601 string
-      // For security, you might choose NOT to serialize password_hash
-      // when sending data to the client or storing it insecurely.
       'password_hash': password_hash,
     };
   }

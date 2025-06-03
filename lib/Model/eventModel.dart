@@ -1,6 +1,4 @@
-// eventModel.dart
 
-// Re-defining LocationPoint as it's used within EventModel
 class LocationPoint {
   String? type;
   List<double>? coordinates;
@@ -68,8 +66,7 @@ class EventModel {
       id: json['id'] as int?,
       name: json['name'] as String?,
       description: json['description'] as String?,
-      // For $date types, parse as DateTime. You might format them as 'yyyy-MM-dd' strings
-      // when sending them to the API if the API expects only date part.
+     
       start_date: json['start_date'] != null
           ? DateTime.tryParse(json['start_date'] as String)
           : null,
@@ -101,10 +98,9 @@ class EventModel {
       'id': id,
       'name': name,
       'description': description,
-      // For $date types, format as 'yyyy-MM-dd' string if the API expects only date part.
-      // Otherwise, toIso8601String() includes time.
-      'start_date': start_date?.toIso8601String().split('T')[0], // "YYYY-MM-DD"
-      'end_date': end_date?.toIso8601String().split('T')[0],     // "YYYY-MM-DD"
+    
+      'start_date': start_date?.toIso8601String().split('T')[0], 
+      'end_date': end_date?.toIso8601String().split('T')[0],    
       'location_name': location_name,
       'address': address,
       'latitude': latitude,

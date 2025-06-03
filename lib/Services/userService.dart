@@ -1,9 +1,9 @@
-// lib/services/userService.dart
+
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
-import '../model/userModel.dart'; // Pastikan path model User sudah benar
+import '../model/userModel.dart'; 
 import 'auth_manager.dart';
 
 class UserService {

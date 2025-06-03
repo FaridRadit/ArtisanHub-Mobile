@@ -1,5 +1,5 @@
 
-// notificationModel.dart
+
 
 class NotificationModel {
   int? id;
@@ -7,7 +7,7 @@ class NotificationModel {
   String? type;
   String? title;
   String? message;
-  int? target_id; // Assuming target_id is an integer (e.g., ID of a product, order, etc.)
+  int? target_id; 
   bool? is_read;
   DateTime? sent_at;
 

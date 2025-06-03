@@ -1,11 +1,10 @@
-// lib/screens/edit_profile_user_screen.dart
+
 
 import 'package:flutter/material.dart';
-import '../services/userService.dart'; // Pastikan path benar
-import '../model/userModel.dart'; // Pastikan path model User sudah benar
-
+import '../services/userService.dart';
+import '../model/userModel.dart';
 class EditProfileUserScreen extends StatefulWidget {
-  final User currentUser; // Menerima data pengguna saat ini
+  final User currentUser;
 
   const EditProfileUserScreen({super.key, required this.currentUser});
 

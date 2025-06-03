@@ -1,19 +1,19 @@
-// lib/screens/homepage.dart
 
-import 'package:artisanhub11/pages/auth/login.dart';
-import 'package:artisanhub11/pages/events_screen.dart';
-import 'package:artisanhub11/pages/profile_screen.dart';
-import 'package:artisanhub11/pages/settings_screen.dart';
-import 'package:artisanhub11/pages/suggestions_feedback_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart'; // Import flutter_map
-import 'package:latlong2/latlong.dart'; // Import latlong2
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart'; 
 import '../services/auth_manager.dart';
-import '../routes/Routenames.dart'; // Import Routenames
+import '../routes/Routenames.dart'; 
 
-import '../services/artisanService.dart'; // Import ArtisanService
-import '../model/artisanModel.dart'; // Import model artisan
-import '../model/userModel.dart'; // Pastikan model User juga diimpor di sini, karena artisan menggunakannya
+import './auth/login.dart';
+import './events_screen.dart';
+import './profile_screen.dart';
+import './settings_screen.dart';
+import './suggestions_feedback_screen.dart';
+
+import '../services/artisanService.dart'; 
+import '../model/artisanModel.dart'; 
+import '../model/userModel.dart'; 
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -42,8 +42,8 @@ class _HomepageState extends State<Homepage> {
 
   Future<void> _initializeHomepage() async {
     _userRole = await AuthManager.getUserRole();
-    _buildNavigationItems(); // Panggil fungsi untuk membangun item navigasi setelah role didapat
-    setState(() {}); // Perbarui UI setelah role dan item navigasi dimuat
+    _buildNavigationItems(); 
+    setState(() {}); 
   }
 
   void _buildNavigationItems() {
@@ -113,7 +113,7 @@ class _HomepageState extends State<Homepage> {
 
   @override
   Widget build(BuildContext context) {
-    // Tampilkan CircularProgressIndicator jika role belum dimuat
+    
     if (_userRole == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -123,8 +123,7 @@ class _HomepageState extends State<Homepage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("ArtisanHub"),
-        backgroundColor: Colors.blue, // Contoh warna AppBar
-        foregroundColor: Colors.white, // Warna teks AppBar
+        
         actions: [
           // Tombol Logout di AppBar
           IconButton(
@@ -146,21 +145,23 @@ class _HomepageState extends State<Homepage> {
       ),
       body: IndexedStack(
         index: _selectedIndex,
-        children: _currentWidgetOptions, // Ini harus List<Widget>
+        children: _currentWidgetOptions,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: _currentBottomNavBarItems, // Ini harus List<BottomNavigationBarItem>
+        items: _currentBottomNavBarItems, 
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blueAccent,
+        selectedItemColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed, // Penting untuk lebih dari 3 item
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Theme.of(context).cardColor,
+        elevation: 10, 
       ),
     );
   }
 }
 
-// Widget terpisah untuk konten halaman Beranda
+
 class _HomeContent extends StatefulWidget {
   final String? userRole;
 
@@ -171,12 +172,13 @@ class _HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<_HomeContent> {
-  // Posisi awal marker (contoh: Yogyakarta)
   LatLng _markerLocation = const LatLng(-7.7956, 110.3695);
-  final ArtisanService _artisanService = ArtisanService(); // Instance ArtisanService
-  final MapController _mapController = MapController(); // Controller untuk mengontrol peta
+  final ArtisanService _artisanService = ArtisanService();
+  final MapController _mapController = MapController(); 
+  artisan? _currentArtisanProfile;
+  bool _isLoadingArtisanProfile = false;
 
-  // Controllers untuk input di dialog (untuk artisan profile creation)
+
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _expertiseCategoryController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
@@ -186,30 +188,128 @@ class _HomeContentState extends State<_HomeContent> {
 
   // Controllers dan state untuk pencarian artisan
   final TextEditingController _searchController = TextEditingController();
-  List<artisan> _foundArtisans = [];
+  List<artisan> _foundArtisans = []; 
+  List<artisan> _allArtisansForMap = []; 
   bool _isSearchingArtisans = false;
   String? _artisanSearchErrorMessage;
 
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(_onSearchChanged); // Dengarkan perubahan pada search bar
-    _searchArtisans(); // Lakukan pencarian awal saat halaman dimuat
+    _searchController.addListener(_onSearchChanged); 
+    _fetchAllArtisansForMapAndList();
+    if (widget.userRole == 'artisan') {
+      _fetchCurrentArtisanProfile();
+    }
+  }
+
+  // Method untuk mengambil semua artisan untuk peta dan daftar pencarian awal
+  Future<void> _fetchAllArtisansForMapAndList() async {
+    setState(() {
+      _isSearchingArtisans = true;
+      _artisanSearchErrorMessage = null;
+    });
+
+    try {
+      final result = await _artisanService.getAllArtisans();
+      if (result['success']) {
+        setState(() {
+          _allArtisansForMap = result['data'];
+          _foundArtisans = result['data']; // Awalnya, daftar pencarian sama dengan semua artisan
+        });
+      } else {
+        setState(() {
+          _artisanSearchErrorMessage = result['message'] ?? 'Gagal memuat pengrajin.';
+          _allArtisansForMap = [];
+          _foundArtisans = [];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _artisanSearchErrorMessage = 'Terjadi kesalahan saat memuat pengrajin: $e';
+        _allArtisansForMap = [];
+        _foundArtisans = [];
+      });
+    } finally {
+      setState(() {
+        _isSearchingArtisans = false;
+      });
+    }
+  }
+
+  // Method untuk mengambil profil artisan yang sedang login
+  Future<void> _fetchCurrentArtisanProfile() async {
+    setState(() {
+      _isLoadingArtisanProfile = true;
+    });
+    try {
+      final userId = await AuthManager.getUserId();
+      if (userId == null) {
+        print('User ID not found for fetching artisan profile.');
+        return;
+      }
+
+      artisan? fetchedArtisan;
+      final artisanByIdResult = await _artisanService.getArtisanById(userId);
+      if (artisanByIdResult['success']) {
+        fetchedArtisan = artisanByIdResult['data'];
+      } else {
+        print('getArtisanById failed for user ID $userId. Trying getAllArtisans...');
+        final allArtisansResult = await _artisanService.getAllArtisans(limit: 100);
+        if (allArtisansResult['success'] && allArtisansResult['data'] is List) {
+          List<artisan> allArtisans = allArtisansResult['data'];
+          fetchedArtisan = allArtisans.firstWhere(
+            (art) => art.user_id == userId,
+            orElse: () => null!,
+          );
+          if (fetchedArtisan == null) {
+            print('No artisan profile found matching user_id $userId in all artisans.');
+          }
+        }
+      }
+
+      setState(() {
+        _currentArtisanProfile = fetchedArtisan;
+        if (_currentArtisanProfile != null) {
+          // Jika profil ditemukan, set marker ke lokasi profil artisan
+          _markerLocation = LatLng(_currentArtisanProfile!.latitude!, _currentArtisanProfile!.longitude!);
+          _mapController.move(_markerLocation, _mapController.camera.zoom);
+        }
+      });
+    } catch (e) {
+      print('Error fetching current artisan profile: $e');
+    } finally {
+      setState(() {
+        _isLoadingArtisanProfile = false;
+      });
+    }
   }
 
   // Method untuk menampilkan dialog profil pengrajin (untuk create/edit)
   Future<void> _showCreateArtisanProfileDialog() async {
-    // Reset controllers setiap kali dialog dibuka
-    _bioController.clear();
-    _expertiseCategoryController.clear();
-    _addressController.clear();
-    _contactEmailController.clear();
-    _contactPhoneController.clear();
-    _websiteUrlController.clear();
+    final bool isEditing = _currentArtisanProfile != null;
+    final String dialogTitle = isEditing ? 'Edit Profil Pengrajin' : 'Buat Profil Pengrajin';
+    final String buttonText = isEditing ? 'Simpan Perubahan' : 'Buat Profil';
+
+    if (isEditing) {
+      _bioController.text = _currentArtisanProfile!.bio ?? '';
+      _expertiseCategoryController.text = _currentArtisanProfile!.expertise_category ?? '';
+      _addressController.text = _currentArtisanProfile!.address ?? '';
+      _contactEmailController.text = _currentArtisanProfile!.contact_email ?? '';
+      _contactPhoneController.text = _currentArtisanProfile!.contact_phone ?? '';
+      _websiteUrlController.text = _currentArtisanProfile!.website_url ?? '';
+    } else {
+      _bioController.clear();
+      _expertiseCategoryController.clear();
+      _addressController.clear();
+      _contactEmailController.clear();
+      _contactPhoneController.clear();
+      _websiteUrlController.clear();
+    }
 
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // User must tap button to close
+      barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         bool isLoading = false;
         String? dialogErrorMessage;
@@ -217,13 +317,13 @@ class _HomeContentState extends State<_HomeContent> {
         return StatefulBuilder(
           builder: (context, setStateInDialog) {
             return AlertDialog(
-              title: const Text('Buat Profil Pengrajin'),
+              title: Text(dialogTitle),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Text(
-                      'Lokasi: Lat ${_markerLocation.latitude.toStringAsFixed(4)}, Lon ${_markerLocation.longitude.toStringAsFixed(4)}',
+                      'Lokasi Terpilih: Lat ${_markerLocation.latitude.toStringAsFixed(4)}, Lon ${_markerLocation.longitude.toStringAsFixed(4)}',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
@@ -276,7 +376,6 @@ class _HomeContentState extends State<_HomeContent> {
                                 dialogErrorMessage = null;
                               });
 
-                              // Validasi input
                               if (_expertiseCategoryController.text.isEmpty || _addressController.text.isEmpty) {
                                 setStateInDialog(() {
                                   dialogErrorMessage = 'Kategori Keahlian dan Alamat wajib diisi.';
@@ -286,25 +385,43 @@ class _HomeContentState extends State<_HomeContent> {
                               }
 
                               try {
-                                final result = await _artisanService.createArtisanProfile(
-                                  bio: _bioController.text.isEmpty ? null : _bioController.text,
-                                  expertiseCategory: _expertiseCategoryController.text,
-                                  address: _addressController.text,
-                                  latitude: _markerLocation.latitude,
-                                  longitude: _markerLocation.longitude,
-                                  contactEmail: _contactEmailController.text.isEmpty ? null : _contactEmailController.text,
-                                  contactPhone: _contactPhoneController.text.isEmpty ? null : _contactPhoneController.text,
-                                  websiteUrl: _websiteUrlController.text.isEmpty ? null : _websiteUrlController.text,
-                                );
+                                Map<String, dynamic> result;
+                                if (isEditing) {
+                                  result = await _artisanService.updateArtisanProfile(
+                                    _currentArtisanProfile!.id!,
+                                    bio: _bioController.text.isEmpty ? null : _bioController.text,
+                                    expertiseCategory: _expertiseCategoryController.text,
+                                    address: _addressController.text,
+                                    latitude: _markerLocation.latitude,
+                                    longitude: _markerLocation.longitude,
+                                    contactEmail: _contactEmailController.text.isEmpty ? null : _contactEmailController.text,
+                                    contactPhone: _contactPhoneController.text.isEmpty ? null : _contactPhoneController.text,
+                                    websiteUrl: _websiteUrlController.text.isEmpty ? null : _websiteUrlController.text,
+                                  );
+                                } else {
+                                  result = await _artisanService.createArtisanProfile(
+                                    bio: _bioController.text.isEmpty ? null : _bioController.text,
+                                    expertiseCategory: _expertiseCategoryController.text,
+                                    address: _addressController.text,
+                                    latitude: _markerLocation.latitude,
+                                    longitude: _markerLocation.longitude,
+                                    contactEmail: _contactEmailController.text.isEmpty ? null : _contactEmailController.text,
+                                    contactPhone: _contactPhoneController.text.isEmpty ? null : _contactPhoneController.text,
+                                    websiteUrl: _websiteUrlController.text.isEmpty ? null : _websiteUrlController.text,
+                                  );
+                                }
+
 
                                 if (result['success']) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text(result['message'])),
                                   );
-                                  Navigator.of(dialogContext).pop(); // Tutup dialog
+                                  Navigator.of(dialogContext).pop();
+                                  _fetchCurrentArtisanProfile(); // Refresh profil artisan setelah berhasil membuat/mengedit
+                                  _fetchAllArtisansForMapAndList(); // Refresh daftar artisan di peta/list
                                 } else {
                                   setStateInDialog(() {
-                                    dialogErrorMessage = result['message'] ?? 'Gagal membuat profil.';
+                                    dialogErrorMessage = result['message'] ?? 'Gagal menyimpan profil.';
                                   });
                                 }
                               } catch (e) {
@@ -317,7 +434,7 @@ class _HomeContentState extends State<_HomeContent> {
                                 });
                               }
                             },
-                            child: const Text('Buat Profil'),
+                            child: Text(buttonText),
                           ),
                   ],
                 ),
@@ -326,7 +443,7 @@ class _HomeContentState extends State<_HomeContent> {
                 TextButton(
                   child: const Text('Batal'),
                   onPressed: () {
-                    Navigator.of(dialogContext).pop(); // Tutup dialog
+                    Navigator.of(dialogContext).pop();
                   },
                 ),
               ],
@@ -343,7 +460,7 @@ class _HomeContentState extends State<_HomeContent> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          // title: Text(selectedArtisan.user?.full_name ?? selectedArtisan.user?.username ?? 'Detail Pengrajin'),
+          title: Text(selectedArtisan.user?.fullName ?? selectedArtisan.user?.username ?? 'Detail Pengrajin'),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
@@ -375,41 +492,42 @@ class _HomeContentState extends State<_HomeContent> {
   }
 
   // Method untuk melakukan pencarian artisan
-  Future<void> _searchArtisans({String? query}) async {
+  // Sekarang hanya memfilter dari _allArtisansForMap
+  void _searchArtisans({String? query}) {
     setState(() {
       _isSearchingArtisans = true;
       _artisanSearchErrorMessage = null;
     });
 
-    try {
-      // Anda bisa menambahkan lat/lon/radius di sini jika ingin pencarian berbasis lokasi
-      final result = await _artisanService.getAllArtisans(q: query);
-      if (result['success']) {
-        setState(() {
-          _foundArtisans = result['data'];
-        });
-      } else {
-        setState(() {
-          _artisanSearchErrorMessage = result['message'] ?? 'Gagal mencari pengrajin.';
-          _foundArtisans = []; // Kosongkan daftar jika gagal
-        });
-      }
-    } catch (e) {
+    if (query == null || query.isEmpty) {
       setState(() {
-        _artisanSearchErrorMessage = 'Terjadi kesalahan saat mencari: $e';
-        _foundArtisans = [];
-      });
-    } finally {
-      setState(() {
+        _foundArtisans = _allArtisansForMap; // Tampilkan semua jika query kosong
         _isSearchingArtisans = false;
       });
+      return;
     }
+
+    final lowerCaseQuery = query.toLowerCase();
+    final filteredList = _allArtisansForMap.where((artisan) {
+      final name = artisan.user?.fullName?.toLowerCase() ?? artisan.user?.username?.toLowerCase() ?? '';
+      final description = artisan.bio?.toLowerCase() ?? '';
+      final category = artisan.expertise_category?.toLowerCase() ?? '';
+      return name.contains(lowerCaseQuery) ||
+             description.contains(lowerCaseQuery) ||
+             category.contains(lowerCaseQuery);
+    }).toList();
+
+    setState(() {
+      _foundArtisans = filteredList;
+      _isSearchingArtisans = false;
+      if (_foundArtisans.isEmpty) {
+        _artisanSearchErrorMessage = 'Tidak ada pengrajin ditemukan untuk "${query}".';
+      }
+    });
   }
 
   // Callback saat teks pencarian berubah
   void _onSearchChanged() {
-    // Implementasi debounce jika ingin menghindari terlalu banyak panggilan API
-    // Untuk kesederhanaan, kita panggil langsung
     _searchArtisans(query: _searchController.text);
   }
 
@@ -439,13 +557,19 @@ class _HomeContentState extends State<_HomeContent> {
                 style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
                 textAlign: TextAlign.center,
               ),
-              // Tambahkan tombol untuk memicu dialog secara manual (opsional)
+              // Tombol untuk memicu dialog pembuatan profil pengrajin
               if (widget.userRole == 'artisan')
                 Padding(
                   padding: const EdgeInsets.only(top: 10.0),
                   child: ElevatedButton(
                     onPressed: _showCreateArtisanProfileDialog,
-                    child: const Text('Buat/Edit Profil Pengrajin di Lokasi Ini'),
+                    child: _isLoadingArtisanProfile
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                          )
+                        : Text(_currentArtisanProfile != null ? 'Edit Profil Pengrajin' : 'Buat Profil Pengrajin'),
                   ),
                 ),
             ],
@@ -468,8 +592,7 @@ class _HomeContentState extends State<_HomeContent> {
                   });
 
                   // Jika role adalah artisan, tampilkan dialog
-                  if (widget.userRole == 'artisan') {
-                    // Beri sedikit jeda agar marker sempat pindah sebelum dialog muncul
+                  if (widget.userRole == 'artisan' && !_isLoadingArtisanProfile) {
                     await Future.delayed(const Duration(milliseconds: 100));
                     _showCreateArtisanProfileDialog();
                   }
@@ -480,10 +603,11 @@ class _HomeContentState extends State<_HomeContent> {
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.example.artisanhub11', // Ganti dengan package name aplikasi Anda
                 ),
+                // Marker untuk lokasi yang dipilih pengguna
                 MarkerLayer(
                   markers: [
                     Marker(
-                      point: _markerLocation, // Marker akan mengikuti _markerLocation
+                      point: _markerLocation,
                       width: 80,
                       height: 80,
                       child: const Icon(
@@ -493,6 +617,44 @@ class _HomeContentState extends State<_HomeContent> {
                       ),
                     ),
                   ],
+                ),
+                // Marker untuk semua artisan
+                MarkerLayer(
+                  markers: _allArtisansForMap.where((artisan) => artisan.latitude != null && artisan.longitude != null).map((artisan) {
+                    return Marker(
+                      point: LatLng(artisan.latitude!, artisan.longitude!),
+                      width: 80,
+                      height: 80,
+                      child: GestureDetector(
+                        onTap: () {
+                          // Pindahkan marker utama ke lokasi artisan ini
+                          setState(() {
+                            _markerLocation = LatLng(artisan.latitude!, artisan.longitude!);
+                          });
+                          // Animasikan peta ke lokasi marker artisan
+                          _mapController.move(
+                              LatLng(artisan.latitude!, artisan.longitude!),
+                              _mapController.camera.zoom);
+                          _showArtisanDetailDialog(artisan);
+                        },
+                        child: Column(
+                          children: [
+                            Icon(Icons.location_on, color: Theme.of(context).primaryColor, size: 30),
+                            Text(
+                              artisan.user?.username ?? '',
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ],
             ),
@@ -510,7 +672,6 @@ class _HomeContentState extends State<_HomeContent> {
                   decoration: const InputDecoration(
                     labelText: 'Cari Pengrajin (nama/deskripsi)',
                     suffixIcon: Icon(Icons.search),
-                    // border: OutlineInputBorder(), // Sudah diatur di AppTheme
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -531,18 +692,14 @@ class _HomeContentState extends State<_HomeContent> {
                                       final artisan = _foundArtisans[index];
                                       return Card(
                                         margin: const EdgeInsets.symmetric(vertical: 4),
-                                        child: ListTile(
-                                          // leading: artisan.user?.profile_picture_url != null && artisan.user!.profile_picture_url!.isNotEmpty
-                                          //     ? CircleAvatar(
-                                          //         backgroundImage: NetworkImage(artisan.user!.profile_picture_url!),
-                                          //       )
-                                          //     : const CircleAvatar(
-                                          //         child: Icon(Icons.person),
-                                          //       ),
-                                          // title: Text(artisan.user?.full_name ?? artisan.user?.username ?? 'Pengrajin Tanpa Nama'),
-                                          subtitle: Text(artisan.expertise_category ?? 'Tanpa Kategori'),
+                                        elevation: 4, // Tambahkan sedikit shadow
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10), // Rounded corners
+                                        ),
+                                        child: InkWell( // Membuat Card bisa di-tap
+                                          borderRadius: BorderRadius.circular(10),
                                           onTap: () {
-                                            // Pindahkan marker ke lokasi artisan
+                                            // Pindahkan marker utama ke lokasi artisan
                                             setState(() {
                                               _markerLocation = LatLng(artisan.latitude!, artisan.longitude!);
                                             });
@@ -553,6 +710,59 @@ class _HomeContentState extends State<_HomeContent> {
                                             // Tampilkan popup detail artisan
                                             _showArtisanDetailDialog(artisan);
                                           },
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0), // Padding di dalam Card
+                                            child: Row(
+                                              children: [
+                                                // Gambar Profil atau Icon Default
+                                                CircleAvatar(
+                                                  radius: 30,
+                                                  backgroundImage: artisan.user?.profile_picture_url != null && artisan.user!.profile_picture_url!.isNotEmpty
+                                                      ? NetworkImage(artisan.user!.profile_picture_url!)
+                                                      : null,
+                                                  child: artisan.user?.profile_picture_url == null || artisan.user!.profile_picture_url!.isEmpty
+                                                      ? const Icon(Icons.person, size: 30)
+                                                      : null,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                // Nama dan Kategori
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        artisan.user?.fullName ?? artisan.user?.username ?? 'Pengrajin Tanpa Nama',
+                                                        style: const TextStyle(
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 16,
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                      Text(
+                                                        artisan.expertise_category ?? 'Tanpa Kategori',
+                                                        style: TextStyle(
+                                                          color: Colors.grey[600],
+                                                          fontSize: 14,
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                      if (artisan.avg_rating != null)
+                                                        Row(
+                                                          children: [
+                                                            Icon(Icons.star, color: Colors.amber, size: 16),
+                                                            Text('${artisan.avg_rating!.toStringAsFixed(1)} (${artisan.total_reviews ?? 0})'),
+                                                          ],
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                // Icon Panah (opsional)
+                                                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                       );
                                     },
@@ -574,7 +784,7 @@ class _HomeContentState extends State<_HomeContent> {
     _contactEmailController.dispose();
     _contactPhoneController.dispose();
     _websiteUrlController.dispose();
-    _searchController.dispose(); // Jangan lupa dispose search controller
+    _searchController.dispose();
     super.dispose();
   }
 }

@@ -3,7 +3,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
-import '../model/productModel.dart'; // Pastikan path model product sudah benar
+import '../model/productModel.dart'; // Menggunakan 'models' bukan 'model'
 import 'auth_manager.dart';
 
 class ProductService {
@@ -23,10 +23,22 @@ class ProductService {
     };
     if (category != null) queryParams['category'] = category;
     if (q != null) queryParams['q'] = q;
+
+    // Perbaikan: Konversi artisanId ke string sebelum menambahkannya ke queryParams
+    // Backend Anda di `getAllProducts` productController.js menerima artisanId sebagai query parameter
     if (artisanId != null) queryParams['artisanId'] = artisanId.toString();
 
     final uri = Uri.parse('$_baseUrl/products').replace(queryParameters: queryParams);
-    final response = await http.get(uri);
+    
+    // Untuk getAllProducts, token mungkin tidak selalu diperlukan jika endpoint ini publik.
+    // Namun, jika backend Anda memerlukan autentikasi untuk semua produk, tambahkan header Authorization.
+    final token = await AuthManager.getAuthToken();
+    Map<String, String> headers = {'Content-Type': 'application/json'};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final response = await http.get(uri, headers: headers);
 
     final responseBody = json.decode(response.body);
 
@@ -43,7 +55,13 @@ class ProductService {
   // Mendapatkan produk berdasarkan ID
   Future<Map<String, dynamic>> getProductById(int id) async {
     final url = Uri.parse('$_baseUrl/products/$id');
-    final response = await http.get(url);
+    final token = await AuthManager.getAuthToken(); // Asumsi endpoint ini mungkin memerlukan token
+    Map<String, String> headers = {'Content-Type': 'application/json'};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final response = await http.get(url, headers: headers);
 
     final responseBody = json.decode(response.body);
 
@@ -65,6 +83,7 @@ class ProductService {
     int? stockQuantity,
     bool? isAvailable,
   }) async {
+    // URL sudah benar: /api/products/:artisan_id
     final url = Uri.parse('$_baseUrl/products/$artisanId');
     final token = await AuthManager.getAuthToken();
 
@@ -112,6 +131,7 @@ class ProductService {
     int? stockQuantity,
     bool? isAvailable,
   }) async {
+    // URL sudah benar: /api/products/:id
     final url = Uri.parse('$_baseUrl/products/$id');
     final token = await AuthManager.getAuthToken();
 
@@ -149,6 +169,7 @@ class ProductService {
 
   // Menghapus produk
   Future<Map<String, dynamic>> deleteProduct(int id) async {
+    // URL sudah benar: /api/products/:id
     final url = Uri.parse('$_baseUrl/products/$id');
     final token = await AuthManager.getAuthToken();
 

@@ -1,4 +1,3 @@
-// lib/screens/profile_screen.dart
 
 import 'package:flutter/material.dart';
 import '../services/userService.dart';
@@ -6,8 +5,8 @@ import '../services/artisanService.dart';
 import '../services/auth_manager.dart';
 import '../model/userModel.dart';
 import '../model/artisanModel.dart';
-import '../routes/Routenames.dart'; // Import Routenames
-import 'edit_profile_user_screen.dart'; // Import EditProfileUserScreen
+import '../routes/Routenames.dart';
+import 'edit_profile_user_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -49,14 +48,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
 
         if (_userRole == 'artisan' && _userProfile?.id != null) {
-          final artisanResult = await _artisanService.getArtisanById(_userProfile!.id!);
-          if (artisanResult['success']) {
+          // --- LOGIKA PERBAIKAN PENGAMBILAN PROFIL ARTISAN ---
+          final userId = _userProfile!.id!;
+          artisan? fetchedArtisan;
+
+          final artisanByIdResult = await _artisanService.getArtisanById(userId);
+          if (artisanByIdResult['success']) {
+            fetchedArtisan = artisanByIdResult['data'];
+          } else {
+           
+            print('getArtisanById failed for user ID $userId. Trying getAllArtisans...');
+            final allArtisansResult = await _artisanService.getAllArtisans(limit: 100); // Ambil lebih banyak atau sesuaikan limit
+            if (allArtisansResult['success'] && allArtisansResult['data'] is List) {
+              List<artisan> allArtisans = allArtisansResult['data'];
+              fetchedArtisan = allArtisans.firstWhere(
+                (art) => art.user_id == userId,
+                orElse: () => null!, 
+              );
+              if (fetchedArtisan == null) {
+                print('No artisan profile found matching user_id $userId in all artisans.');
+              }
+            } else {
+              print('Failed to fetch all artisans: ${allArtisansResult['message']}');
+            }
+          }
+
+          if (fetchedArtisan != null) {
             setState(() {
-              _artisanProfile = artisanResult['data'];
+              _artisanProfile = fetchedArtisan;
             });
           } else {
-            print('Catatan: Pengguna adalah artisan tetapi belum memiliki profil artisan: ${artisanResult['message']}');
+            print('Catatan: Pengguna adalah artisan tetapi belum memiliki profil pengrajin atau tidak dapat ditemukan.');
           }
+
         }
       } else {
         setState(() {
@@ -123,9 +147,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ]),
                           const SizedBox(height: 20),
 
+                          // Tampilkan data profil pengrajin jika role adalah 'artisan'
                           if (_userRole == 'artisan')
                             _buildProfileSection('Profil Pengrajin', [
-                              if (_artisanProfile != null) ...[
+                              if (_artisanProfile != null) ...[ // <--- Bagian ini yang mengecek jika data artisan profile sudah ada
                                 _buildProfileInfo('Bio', _artisanProfile!.bio),
                                 _buildProfileInfo('Kategori Keahlian', _artisanProfile!.expertise_category),
                                 _buildProfileInfo('Alamat Pengrajin', _artisanProfile!.address),
@@ -144,13 +169,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ] else
                                 const Text(
-                                  'Anda adalah pengrajin tetapi belum memiliki profil pengrajin. Silakan buat di halaman Beranda.',
+                                  'Anda adalah pengrajin tetapi belum memiliki profil pengrajin. Silakan buat di halaman Beranda atau profil tidak ditemukan.',
                                   style: TextStyle(fontStyle: FontStyle.italic, color: Colors.orange),
                                   textAlign: TextAlign.center,
                                 ),
                             ]),
                           const SizedBox(height: 30),
 
+                          // Tombol Aksi Berdasarkan Role
                           _buildRoleBasedButtons(context),
                         ],
                       ),

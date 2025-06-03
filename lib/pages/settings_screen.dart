@@ -1,7 +1,7 @@
-// lib/screens/settings_screen.dart
+
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Untuk NumberFormat dan DateFormat
+import 'package:intl/intl.dart'; 
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -20,9 +20,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // Nilai tukar relatif terhadap 1 USD
   final Map<String, double> _exchangeRates = {
     'USD': 1.0,
-    'IDR': 15500.0, // 1 USD = 15500 IDR (contoh)
-    'EUR': 0.92,    // 1 USD = 0.92 EUR (contoh)
-    'JPY': 155.0,   // 1 USD = 155 JPY (contoh)
+    'IDR': 15500.0, 
+    'EUR': 0.92,   
+    'JPY': 155.0,  
   };
 
   void _convertCurrency() {
