@@ -1,5 +1,6 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiConfig {
-  static const String baseUrl = 'https://backendartisanhub-130852023885.asia-southeast2.run.app/api';
-  static const String baseAuthUrl = 'https://backendartisanhub-130852023885.asia-southeast2.run.app/api/auth';
+ static String get baseUrl => dotenv.env['BASE_URL'] ?? 'Default Base URL'; // Provide a fallback
+  static String get baseAuthUrl => dotenv.env['BASE_AUTH_URL'] ?? 'Default Base Auth URL';
 }
