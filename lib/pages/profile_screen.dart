@@ -1,4 +1,4 @@
-
+import 'package:artisanhub11/pages/auth/login.dart';
 import 'package:flutter/material.dart';
 import '../services/userService.dart';
 import '../services/artisanService.dart';
@@ -7,6 +7,7 @@ import '../model/userModel.dart';
 import '../model/artisanModel.dart';
 import '../routes/Routenames.dart';
 import 'edit_profile_user_screen.dart';
+import '../theme/theme.dart'; // Import your theme for text styles
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -48,7 +49,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
 
         if (_userRole == 'artisan' && _userProfile?.id != null) {
-          // --- LOGIKA PERBAIKAN PENGAMBILAN PROFIL ARTISAN ---
           final userId = _userProfile!.id!;
           artisan? fetchedArtisan;
 
@@ -56,14 +56,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (artisanByIdResult['success']) {
             fetchedArtisan = artisanByIdResult['data'];
           } else {
-           
             print('getArtisanById failed for user ID $userId. Trying getAllArtisans...');
-            final allArtisansResult = await _artisanService.getAllArtisans(limit: 100); // Ambil lebih banyak atau sesuaikan limit
+            final allArtisansResult = await _artisanService.getAllArtisans(limit: 100);
             if (allArtisansResult['success'] && allArtisansResult['data'] is List) {
               List<artisan> allArtisans = allArtisansResult['data'];
               fetchedArtisan = allArtisans.firstWhere(
                 (art) => art.user_id == userId,
-                orElse: () => null!, 
+                orElse: () => null!,
               );
               if (fetchedArtisan == null) {
                 print('No artisan profile found matching user_id $userId in all artisans.');
@@ -78,18 +77,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _artisanProfile = fetchedArtisan;
             });
           } else {
-            print('Catatan: Pengguna adalah artisan tetapi belum memiliki profil pengrajin atau tidak dapat ditemukan.');
+            print('Note: User is an artisan but does not have an artisan profile or it could not be found.');
           }
-
         }
       } else {
         setState(() {
-          _errorMessage = userResult['message'] ?? 'Gagal memuat profil pengguna.';
+          _errorMessage = userResult['message'] ?? 'Failed to load user profile.';
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Terjadi kesalahan saat memuat profil: $e';
+        _errorMessage = 'An error occurred while loading profile: $e';
       });
     } finally {
       setState(() {
@@ -98,12 +96,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _logout() async {
+    await AuthManager.clearAuthData();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (Route<dynamic> route) => false,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('You have been logged out.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profil Pengguna'),
+        title: const Text(
+          'My Profile',
+          style: TextStyle(
+            color: Colors.black, // Dark text color for app bar title
+            fontFamily: "jakarta-sans", // Apply custom font
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
+        backgroundColor: Colors.transparent, // Transparent background
+        elevation: 0, // No shadow
+        // Leading back button typically provided by Scaffold automatically if pushed
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -113,173 +133,172 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.all(16.0),
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(color: Colors.red, fontSize: 16),
+                      style: const TextStyle(color: Colors.red, fontSize: 16, fontFamily: "jakarta-sans"),
                       textAlign: TextAlign.center,
                     ),
                   ),
                 )
               : _userProfile == null
-                  ? const Center(child: Text('Tidak ada data profil pengguna.'))
+                  ? const Center(child: Text('No user profile data.', style: TextStyle(fontFamily: "jakarta-sans"),))
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Center(
-                            child: CircleAvatar(
-                              radius: 60,
-                              backgroundImage: _userProfile!.profile_picture_url != null && _userProfile!.profile_picture_url!.isNotEmpty
-                                  ? NetworkImage(_userProfile!.profile_picture_url!)
-                                  : null,
-                              child: _userProfile!.profile_picture_url == null || _userProfile!.profile_picture_url!.isEmpty
-                                  ? const Icon(Icons.person, size: 60)
-                                  : null,
+                          // User Profile Card (as per design)
+                          Card(
+                            margin: EdgeInsets.zero, // Remove default card margin
+                            elevation: 0, // No shadow
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15), // Rounded corners
+                              side: BorderSide(color: Colors.grey[200]!, width: 1), // Subtle border
+                            ),
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 30, // Adjust size as per design
+                                    backgroundImage: _userProfile!.profile_picture_url != null && _userProfile!.profile_picture_url!.isNotEmpty
+                                        ? NetworkImage(_userProfile!.profile_picture_url!)
+                                        : null,
+                                    child: _userProfile!.profile_picture_url == null || _userProfile!.profile_picture_url!.isEmpty
+                                        ? const Icon(Icons.person, size: 30, color: Colors.grey)
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 15),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _userProfile!.fullName ?? _userProfile!.username??'',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: "jakarta-sans",
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          _userProfile!.email??_userProfile!.email??'',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                            fontFamily: "jakarta-sans",
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Edit Icon Button
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined, color: Color(0xFF4300FF)), // Blue edit icon
+                                    onPressed: () async {
+                                      if (_userProfile != null) {
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => EditProfileUserScreen(currentUser: _userProfile!)),
+                                        );
+                                        if (result == true) {
+                                          _fetchUserProfileAndRole(); // Refresh data after edit
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          _buildProfileSection('Informasi Akun', [
-                            _buildProfileInfo('Username', _userProfile!.username),
-                            _buildProfileInfo('Email', _userProfile!.email),
-                            _buildProfileInfo('Nama Lengkap', _userProfile!.fullName),
-                            _buildProfileInfo('Role', _userProfile!.role),
-                            _buildProfileInfo('Nomor Telepon', _userProfile!.phone_number),
-                            _buildProfileInfo('Bergabung Sejak', _userProfile!.created_at?.toLocal().toString().split(' ')[0]),
-                          ]),
-                          const SizedBox(height: 20),
-
-                          // Tampilkan data profil pengrajin jika role adalah 'artisan'
-                          if (_userRole == 'artisan')
-                            _buildProfileSection('Profil Pengrajin', [
-                              if (_artisanProfile != null) ...[ // <--- Bagian ini yang mengecek jika data artisan profile sudah ada
-                                _buildProfileInfo('Bio', _artisanProfile!.bio),
-                                _buildProfileInfo('Kategori Keahlian', _artisanProfile!.expertise_category),
-                                _buildProfileInfo('Alamat Pengrajin', _artisanProfile!.address),
-                                _buildProfileInfo('Email Kontak', _artisanProfile!.contact_email),
-                                _buildProfileInfo('Telepon Kontak', _artisanProfile!.contact_phone),
-                                _buildProfileInfo('URL Website', _artisanProfile!.website_url),
-                                _buildProfileInfo('Rating Rata-rata', _artisanProfile!.avg_rating?.toStringAsFixed(1)),
-                                _buildProfileInfo('Total Ulasan', _artisanProfile!.total_reviews?.toString()),
-                                _buildProfileInfo('Terverifikasi', _artisanProfile!.is_verified == true ? 'Ya' : 'Tidak'),
-                                const SizedBox(height: 10),
-                                Center(
-                                  child: Text(
-                                    'Lat: ${_artisanProfile!.latitude?.toStringAsFixed(4)}, Lon: ${_artisanProfile!.longitude?.toStringAsFixed(4)}',
-                                    style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                                  ),
-                                ),
-                              ] else
-                                const Text(
-                                  'Anda adalah pengrajin tetapi belum memiliki profil pengrajin. Silakan buat di halaman Beranda atau profil tidak ditemukan.',
-                                  style: TextStyle(fontStyle: FontStyle.italic, color: Colors.orange),
-                                  textAlign: TextAlign.center,
-                                ),
-                            ]),
                           const SizedBox(height: 30),
 
-                          // Tombol Aksi Berdasarkan Role
-                          _buildRoleBasedButtons(context),
+                          // Support Section Header
+                          Text(
+                            'Support',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[700],
+                              fontFamily: "jakarta-sans",
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Help List Item
+                          _buildSupportListItem(
+                            icon: Icons.help_outline,
+                            text: 'Help',
+                            onTap: () {
+                              // Navigate to Help Screen or show help dialog
+                              print('Help tapped');
+                            },
+                          ),
+                          // Logout List Item
+                          _buildSupportListItem(
+                            icon: Icons.logout,
+                            text: 'Logout',
+                            onTap: _logout, // Call the logout function
+                            isLogout: true, // For specific styling (red color)
+                          ),
+                          // The design doesn't show artisan-specific profile details
+                          // or other action buttons directly on this screen.
+                          // If those are needed, they might be in a separate 'Edit Profile' screen
+                          // or accessed via the main 'Home' tab for artisans.
                         ],
                       ),
                     ),
     );
   }
 
-  Widget _buildProfileSection(String title, List<Widget> children) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue),
+  // Helper widget for support list items
+  Widget _buildSupportListItem({
+    required IconData icon,
+    required String text,
+    required VoidCallback onTap,
+    bool isLogout = false,
+  }) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(color: Colors.grey[200]!, width: 1),
+      ),
+      color: Colors.white,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: isLogout ? Colors.red : Colors.grey[700], // Red for logout
+                size: 24,
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isLogout ? Colors.red : Colors.black, // Red for logout
+                    fontFamily: "jakarta-sans",
+                  ),
+                ),
+              ),
+              if (!isLogout) // No arrow for logout as per design
+                const Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
+            ],
+          ),
         ),
-        const Divider(color: Colors.blue, thickness: 1.5),
-        ...children,
-      ],
-    );
-  }
-
-  Widget _buildProfileInfo(String label, String? value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value ?? '-',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const Divider(),
-        ],
       ),
     );
-  }
-
-  Widget _buildRoleBasedButtons(BuildContext context) {
-    if (_userProfile == null) return const SizedBox.shrink();
-
-    switch (_userProfile!.role) {
-      case 'artisan':
-        return Center(
-          child: ElevatedButton.icon(
-            icon: const Icon(Icons.add_shopping_cart),
-            label: const Text('Tambah/Kelola Produk'),
-            onPressed: () {
-              // Menggunakan named route
-              Navigator.pushNamed(context, Routenames.product);
-            },
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-            ),
-          ),
-        );
-      case 'admin':
-        return Center(
-          child: ElevatedButton.icon(
-            icon: const Icon(Icons.event_note),
-            label: const Text('Manajemen Acara'),
-            onPressed: () {
-              // Menggunakan named route
-              Navigator.pushNamed(context, Routenames.events);
-            },
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              backgroundColor: Colors.purple,
-              foregroundColor: Colors.white,
-            ),
-          ),
-        );
-      case 'user':
-      default:
-        return Center(
-          child: ElevatedButton.icon(
-            icon: const Icon(Icons.edit),
-            label: const Text('Edit Profil'),
-            onPressed: () async {
-              if (_userProfile != null) {
-                // Tetap menggunakan MaterialPageRoute karena perlu meneruskan objek
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => EditProfileUserScreen(currentUser: _userProfile!)),
-                );
-                if (result == true) {
-                  _fetchUserProfileAndRole();
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-            ),
-          ),
-        );
-    }
   }
 }

@@ -1,3 +1,7 @@
+// lib/models/product.dart
+
+import 'package:flutter/material.dart'; // Hanya jika Anda menggunakan Material/Cupertino di model, jika tidak bisa dihapus
+
 class product {
   int? id;
   int? artisan_id;
@@ -12,7 +16,6 @@ class product {
   DateTime? created_at;
   DateTime? updated_at;
 
-  // Constructor
   product({
     this.id,
     this.artisan_id,
@@ -30,22 +33,39 @@ class product {
 
   // Factory constructor for creating a Product instance from JSON
   factory product.fromJson(Map<String, dynamic> json) {
+    
+    // Helper function to parse numeric values that might come as String or num
+    double? parseToDouble(dynamic value) {
+      if (value == null) return null;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value);
+      return null;
+    }
+
+    int? parseToInt(dynamic value) {
+      if (value == null) return null;
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value);
+      if (value is num) return value.toInt(); // Handle double to int conversion
+      return null;
+    }
+
     return product(
       id: json['id'] as int?,
-      artisan_id: json['artisan_id'] as int?,
+      artisan_id: parseToInt(json['artisan_id']), // Menggunakan helper untuk artisan_id
       name: json['name'] as String?,
       description: json['description'] as String?,
-      price: (json['price'] as num?)?.toDouble(), // Handle int or double from JSON
+      price: parseToDouble(json['price']), // Menggunakan helper untuk parsing yang lebih tangguh
       currency: json['currency'] as String?,
       main_image_url: json['main_image_url'] as String?,
       category: json['category'] as String?,
-      stock_quantity: json['stock_quantity'] as int?,
+      stock_quantity: parseToInt(json['stock_quantity']), // Menggunakan helper untuk parsing yang lebih tangguh
       is_available: json['is_available'] as bool?,
       created_at: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
+          ? DateTime.tryParse(json['created_at'].toString()) // Menggunakan toString() untuk memastikan string
           : null,
       updated_at: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
+          ? DateTime.tryParse(json['updated_at'].toString()) // Menggunakan toString() untuk memastikan string
           : null,
     );
   }
@@ -53,6 +73,7 @@ class product {
   // Method to convert a Product instance to JSON
   Map<String, dynamic> toJson() {
     return {
+  
       'id': id,
       'artisan_id': artisan_id,
       'name': name,

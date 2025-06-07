@@ -1,9 +1,7 @@
-
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
-import '../model/userModel.dart'; 
+import '../model/userModel.dart';
 import 'auth_manager.dart';
 
 class UserService {
@@ -33,6 +31,7 @@ class UserService {
         responseBody['token'],
         responseBody['userId'],
         responseBody['role'],
+      
       );
       return {'success': true, 'message': responseBody['message'], 'token': responseBody['token'], 'userId': responseBody['userId'], 'role': responseBody['role']};
     } else {
@@ -60,6 +59,7 @@ class UserService {
         responseBody['token'],
         responseBody['userId'],
         responseBody['role'],
+       
       );
       return {'success': true, 'message': responseBody['message'], 'token': responseBody['token'], 'userId': responseBody['userId'], 'role': responseBody['role']};
     } else {

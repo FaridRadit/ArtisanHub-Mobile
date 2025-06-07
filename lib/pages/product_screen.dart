@@ -2,8 +2,10 @@
 
 import 'package:flutter/material.dart';
 import '../services/productService.dart'; // Import ProductService
-import '../model/productModel.dart'; // Perbaikan: Menggunakan 'models'
+import '../model/productModel.dart'; // Menggunakan 'models'
 import '../services/auth_manager.dart'; // Untuk mendapatkan user_id dan role
+import '../services/artisanService.dart'; // Import ArtisanService untuk mencari profil artisan
+import '../model/artisanModel.dart'; // Import model artisan
 
 class ProductScreen extends StatefulWidget {
   const ProductScreen({super.key});
@@ -14,10 +16,11 @@ class ProductScreen extends StatefulWidget {
 
 class _ProductScreenState extends State<ProductScreen> {
   final ProductService _productService = ProductService();
+  final ArtisanService _artisanService = ArtisanService(); // Instance ArtisanService
   List<product> _products = [];
   bool _isLoading = true;
   String? _errorMessage;
-  int? _currentArtisanId; // ID Artisan yang sedang login
+  int? _currentArtisanProfileId; 
 
   // Controllers untuk formulir tambah/edit produk
   final TextEditingController _nameController = TextEditingController();
@@ -32,27 +35,82 @@ class _ProductScreenState extends State<ProductScreen> {
   @override
   void initState() {
     super.initState();
-    _loadArtisanIdAndFetchProducts(); // Memuat ID Artisan dan kemudian mengambil produk
+    _loadArtisanProfileIdAndFetchProducts(); // Memuat ID Profil Artisan dan kemudian mengambil produk
   }
 
-  // Memuat ID Artisan dan kemudian mengambil produk
-  Future<void> _loadArtisanIdAndFetchProducts() async {
-    _currentArtisanId = await AuthManager.getUserId();
-    if (_currentArtisanId == null) {
+  // Memuat ID Profil Artisan dan kemudian mengambil produk
+  Future<void> _loadArtisanProfileIdAndFetchProducts() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final userId = await AuthManager.getUserId();
+      print('DEBUG: ProductScreen - Fetched userId from AuthManager: $userId');
+
+      if (userId == null) {
+        setState(() {
+          _errorMessage = 'Anda harus login sebagai pengrajin untuk mengelola produk Anda.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      artisan? fetchedArtisanProfile;
+      final artisanByIdResult = await _artisanService.getArtisanById(userId);
+      
+      print('DEBUG: ProductScreen - Result from getArtisanById($userId): $artisanByIdResult');
+
+      if (artisanByIdResult['success']) {
+        fetchedArtisanProfile = artisanByIdResult['data'];
+      } else {
+        print('DEBUG: ProductScreen - getArtisanById failed. Trying getAllArtisans as fallback...');
+        final allArtisansResult = await _artisanService.getAllArtisans(limit: 100);
+        
+        print('DEBUG: ProductScreen - Result from getAllArtisans: $allArtisansResult');
+
+        if (allArtisansResult['success'] && allArtisansResult['data'] is List) {
+          List<artisan> allArtisans = allArtisansResult['data'];
+          fetchedArtisanProfile = allArtisans.firstWhere(
+            (art) {
+              print('DEBUG: ProductScreen - Checking artisan in list: user_id=${art.user_id}, profile_id=${art.id}');
+              return art.user_id == userId;
+            },
+            orElse: () => null!,
+          );
+          if (fetchedArtisanProfile == null) {
+            print('DEBUG: ProductScreen - No artisan profile found matching user_id $userId in all artisans list.');
+          }
+        } else {
+          print('DEBUG: ProductScreen - Failed to fetch all artisans for fallback.');
+        }
+      }
+
+      if (fetchedArtisanProfile != null && fetchedArtisanProfile.id != null) {
+        _currentArtisanProfileId = fetchedArtisanProfile.id;
+        print('DEBUG: ProductScreen - Found Artisan Profile ID: $_currentArtisanProfileId');
+        _fetchProducts(); // Lanjutkan dengan mengambil produk
+      } else {
+        setState(() {
+          _errorMessage = 'Profil pengrajin Anda tidak ditemukan. Pastikan Anda telah membuat profil pengrajin.';
+          _isLoading = false;
+        });
+        print('DEBUG: ProductScreen - Artisan profile not found for user ID $userId. Cannot load products.');
+      }
+    } catch (e) {
       setState(() {
-        _errorMessage = 'Anda harus login sebagai artisan untuk melihat produk Anda.';
+        _errorMessage = 'Terjadi kesalahan saat memuat ID profil pengrajin: $e';
         _isLoading = false;
       });
-      return;
+      print('DEBUG: ProductScreen - Exception in _loadArtisanProfileIdAndFetchProducts: $e');
     }
-    _fetchProducts(); // Lanjutkan dengan mengambil produk setelah ID tersedia
   }
 
   Future<void> _fetchProducts() async {
-    // Pastikan _currentArtisanId sudah tersedia sebelum mengambil produk
-    if (_currentArtisanId == null) {
-      // Ini seharusnya sudah ditangani oleh _loadArtisanIdAndFetchProducts
-      return;
+    if (_currentArtisanProfileId == null) {
+      print('DEBUG: ProductScreen - _currentArtisanProfileId is null. Cannot fetch products.');
+      return; // Ini seharusnya sudah ditangani oleh _loadArtisanProfileIdAndFetchProducts
     }
 
     setState(() {
@@ -61,20 +119,27 @@ class _ProductScreenState extends State<ProductScreen> {
     });
 
     try {
-      final result = await _productService.getAllProducts(artisanId: _currentArtisanId);
+      print('DEBUG: ProductScreen - Fetching products for artisanId: $_currentArtisanProfileId');
+      final result = await _productService.getAllProducts(artisanId: _currentArtisanProfileId);
+      
+      print('DEBUG: ProductScreen - Result from getAllProducts: $result');
+
       if (result['success']) {
         setState(() {
           _products = result['data'];
         });
+        print('DEBUG: ProductScreen - Products loaded: ${_products.length} items.');
       } else {
         setState(() {
           _errorMessage = result['message'] ?? 'Gagal memuat produk.';
         });
+        print('DEBUG: ProductScreen - Failed to load products: ${result['message']}');
       }
     } catch (e) {
       setState(() {
         _errorMessage = 'Terjadi kesalahan saat memuat produk: $e';
       });
+      print('DEBUG: ProductScreen - Exception in _fetchProducts: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -149,7 +214,6 @@ class _ProductScreenState extends State<ProductScreen> {
                     TextField(
                       controller: _currencyController,
                       decoration: const InputDecoration(labelText: 'Mata Uang*', prefixIcon: Icon(Icons.payments)),
-                      // Default currency could be 'IDR'
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -198,7 +262,6 @@ class _ProductScreenState extends State<ProductScreen> {
                                 dialogErrorMessage = null;
                               });
 
-                              // Validasi input
                               if (_nameController.text.isEmpty ||
                                   _priceController.text.isEmpty ||
                                   _currencyController.text.isEmpty) {
@@ -215,9 +278,9 @@ class _ProductScreenState extends State<ProductScreen> {
                                 });
                                 return;
                               }
-                              if (_currentArtisanId == null) {
+                              if (_currentArtisanProfileId == null) {
                                 setStateInDialog(() {
-                                  dialogErrorMessage = 'ID Artisan tidak ditemukan. Mohon login ulang.';
+                                  dialogErrorMessage = 'ID Profil Pengrajin tidak ditemukan. Mohon login ulang.';
                                   isLoadingDialog = false;
                                 });
                                 return;
@@ -242,7 +305,7 @@ class _ProductScreenState extends State<ProductScreen> {
                                   );
                                 } else {
                                   result = await _productService.createProduct(
-                                    _currentArtisanId!,
+                                    _currentArtisanProfileId!,
                                     name: _nameController.text,
                                     description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
                                     price: double.parse(_priceController.text),
@@ -346,7 +409,7 @@ class _ProductScreenState extends State<ProductScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Tambah Produk',
-            onPressed: () => _showProductFormDialog(), // Panggil dialog tanpa argumen untuk tambah
+            onPressed: () => _showProductFormDialog(),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -453,7 +516,7 @@ class _ProductScreenState extends State<ProductScreen> {
                                     ],
                                   ),
                                 ),
-                                // Tombol Aksi
+                                // Tombol Aksi (selalu muncul di sini karena ini manajemen produk sendiri)
                                 Column(
                                   children: [
                                     IconButton(
