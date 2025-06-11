@@ -1,145 +1,52 @@
-// lib/screens/product_screen.dart
-
 import 'package:flutter/material.dart';
-import '../services/productService.dart'; // Import ProductService
-import '../model/productModel.dart'; // Menggunakan 'models'
-import '../services/auth_manager.dart'; // Untuk mendapatkan user_id dan role
-import '../services/artisanService.dart'; // Import ArtisanService untuk mencari profil artisan
-import '../model/artisanModel.dart'; // Import model artisan
+import '../model/productModel.dart';
+import '../services/productService.dart';
+import '../services/auth_manager.dart';
+import '../theme/theme.dart';
+import 'add_edit_product_screen.dart'; // Import the new screen
 
-class ProductScreen extends StatefulWidget {
-  const ProductScreen({super.key});
+class ProductManagementScreen extends StatefulWidget {
+  final int artisanId;
+
+  const ProductManagementScreen({super.key, required this.artisanId});
 
   @override
-  State<ProductScreen> createState() => _ProductScreenState();
+  State<ProductManagementScreen> createState() => _ProductManagementScreenState();
 }
 
-class _ProductScreenState extends State<ProductScreen> {
+class _ProductManagementScreenState extends State<ProductManagementScreen> {
   final ProductService _productService = ProductService();
-  final ArtisanService _artisanService = ArtisanService(); // Instance ArtisanService
   List<product> _products = [];
   bool _isLoading = true;
   String? _errorMessage;
-  int? _currentArtisanProfileId; 
-
-  // Controllers untuk formulir tambah/edit produk
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _currencyController = TextEditingController();
-  final TextEditingController _mainImageUrlController = TextEditingController();
-  final TextEditingController _categoryController = TextEditingController();
-  final TextEditingController _stockQuantityController = TextEditingController();
-  bool _isAvailable = true; // Default untuk is_available
 
   @override
   void initState() {
     super.initState();
-    _loadArtisanProfileIdAndFetchProducts(); // Memuat ID Profil Artisan dan kemudian mengambil produk
-  }
-
-  // Memuat ID Profil Artisan dan kemudian mengambil produk
-  Future<void> _loadArtisanProfileIdAndFetchProducts() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final userId = await AuthManager.getUserId();
-      print('DEBUG: ProductScreen - Fetched userId from AuthManager: $userId');
-
-      if (userId == null) {
-        setState(() {
-          _errorMessage = 'Anda harus login sebagai pengrajin untuk mengelola produk Anda.';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      artisan? fetchedArtisanProfile;
-      final artisanByIdResult = await _artisanService.getArtisanById(userId);
-      
-      print('DEBUG: ProductScreen - Result from getArtisanById($userId): $artisanByIdResult');
-
-      if (artisanByIdResult['success']) {
-        fetchedArtisanProfile = artisanByIdResult['data'];
-      } else {
-        print('DEBUG: ProductScreen - getArtisanById failed. Trying getAllArtisans as fallback...');
-        final allArtisansResult = await _artisanService.getAllArtisans(limit: 100);
-        
-        print('DEBUG: ProductScreen - Result from getAllArtisans: $allArtisansResult');
-
-        if (allArtisansResult['success'] && allArtisansResult['data'] is List) {
-          List<artisan> allArtisans = allArtisansResult['data'];
-          fetchedArtisanProfile = allArtisans.firstWhere(
-            (art) {
-              print('DEBUG: ProductScreen - Checking artisan in list: user_id=${art.user_id}, profile_id=${art.id}');
-              return art.user_id == userId;
-            },
-            orElse: () => null!,
-          );
-          if (fetchedArtisanProfile == null) {
-            print('DEBUG: ProductScreen - No artisan profile found matching user_id $userId in all artisans list.');
-          }
-        } else {
-          print('DEBUG: ProductScreen - Failed to fetch all artisans for fallback.');
-        }
-      }
-
-      if (fetchedArtisanProfile != null && fetchedArtisanProfile.id != null) {
-        _currentArtisanProfileId = fetchedArtisanProfile.id;
-        print('DEBUG: ProductScreen - Found Artisan Profile ID: $_currentArtisanProfileId');
-        _fetchProducts(); // Lanjutkan dengan mengambil produk
-      } else {
-        setState(() {
-          _errorMessage = 'Profil pengrajin Anda tidak ditemukan. Pastikan Anda telah membuat profil pengrajin.';
-          _isLoading = false;
-        });
-        print('DEBUG: ProductScreen - Artisan profile not found for user ID $userId. Cannot load products.');
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Terjadi kesalahan saat memuat ID profil pengrajin: $e';
-        _isLoading = false;
-      });
-      print('DEBUG: ProductScreen - Exception in _loadArtisanProfileIdAndFetchProducts: $e');
-    }
+    _fetchProducts();
   }
 
   Future<void> _fetchProducts() async {
-    if (_currentArtisanProfileId == null) {
-      print('DEBUG: ProductScreen - _currentArtisanProfileId is null. Cannot fetch products.');
-      return; // Ini seharusnya sudah ditangani oleh _loadArtisanProfileIdAndFetchProducts
-    }
-
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
-      print('DEBUG: ProductScreen - Fetching products for artisanId: $_currentArtisanProfileId');
-      final result = await _productService.getAllProducts(artisanId: _currentArtisanProfileId);
-      
-      print('DEBUG: ProductScreen - Result from getAllProducts: $result');
-
+      final result = await _productService.getAllProducts(artisanId: widget.artisanId);
       if (result['success']) {
         setState(() {
           _products = result['data'];
         });
-        print('DEBUG: ProductScreen - Products loaded: ${_products.length} items.');
       } else {
         setState(() {
-          _errorMessage = result['message'] ?? 'Gagal memuat produk.';
+          _errorMessage = result['message'] ?? 'Failed to load products.';
         });
-        print('DEBUG: ProductScreen - Failed to load products: ${result['message']}');
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Terjadi kesalahan saat memuat produk: $e';
+        _errorMessage = 'An error occurred while loading products: $e';
       });
-      print('DEBUG: ProductScreen - Exception in _fetchProducts: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -147,274 +54,93 @@ class _ProductScreenState extends State<ProductScreen> {
     }
   }
 
-  // Helper untuk reset controllers
-  void _resetControllers() {
-    _nameController.clear();
-    _descriptionController.clear();
-    _priceController.clear();
-    _currencyController.clear();
-    _mainImageUrlController.clear();
-    _categoryController.clear();
-    _stockQuantityController.clear();
-    _isAvailable = true;
-  }
-
-  // Method untuk menampilkan dialog tambah/edit produk
-  Future<void> _showProductFormDialog({product? productToEdit}) async {
-    final bool isEditing = productToEdit != null;
-    final String dialogTitle = isEditing ? 'Edit Produk' : 'Tambah Produk Baru';
-    final String buttonText = isEditing ? 'Simpan Perubahan' : 'Tambah Produk';
-
-    // Isi controllers jika ini operasi edit, reset jika tambah baru
-    if (isEditing) {
-      _nameController.text = productToEdit!.name ?? '';
-      _descriptionController.text = productToEdit.description ?? '';
-      _priceController.text = productToEdit.price?.toString() ?? '';
-      _currencyController.text = productToEdit.currency ?? '';
-      _mainImageUrlController.text = productToEdit.main_image_url ?? '';
-      _categoryController.text = productToEdit.category ?? '';
-      _stockQuantityController.text = productToEdit.stock_quantity?.toString() ?? '';
-      _isAvailable = productToEdit.is_available ?? true;
-    } else {
-      _resetControllers();
-    }
-
-    return showDialog<void>(
+  Future<void> _deleteProduct(int productId) async {
+    // Show a confirmation dialog
+    final bool confirmDelete = await showDialog(
       context: context,
-      barrierDismissible: false,
       builder: (BuildContext dialogContext) {
-        bool isLoadingDialog = false;
-        String? dialogErrorMessage;
-
-        return StatefulBuilder(
-          builder: (context, setStateInDialog) {
-            return AlertDialog(
-              title: Text(dialogTitle),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    TextField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'Nama Produk*', prefixIcon: Icon(Icons.shopping_bag)),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _descriptionController,
-                      decoration: const InputDecoration(labelText: 'Deskripsi (Opsional)', prefixIcon: Icon(Icons.description)),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _priceController,
-                      decoration: const InputDecoration(labelText: 'Harga*', prefixIcon: Icon(Icons.attach_money)),
-                      keyboardType: TextInputType.number,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _currencyController,
-                      decoration: const InputDecoration(labelText: 'Mata Uang*', prefixIcon: Icon(Icons.payments)),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _mainImageUrlController,
-                      decoration: const InputDecoration(labelText: 'URL Gambar Utama (Opsional)', prefixIcon: Icon(Icons.image)),
-                      keyboardType: TextInputType.url,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _categoryController,
-                      decoration: const InputDecoration(labelText: 'Kategori (Opsional)', prefixIcon: Icon(Icons.category)),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _stockQuantityController,
-                      decoration: const InputDecoration(labelText: 'Jumlah Stok (Opsional)', prefixIcon: Icon(Icons.inventory)),
-                      keyboardType: TextInputType.number,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Text('Tersedia:'),
-                        Switch(
-                          value: _isAvailable,
-                          onChanged: (bool value) {
-                            setStateInDialog(() {
-                              _isAvailable = value;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    if (dialogErrorMessage != null)
-                      Text(
-                        dialogErrorMessage!,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    const SizedBox(height: 16),
-                    isLoadingDialog
-                        ? const CircularProgressIndicator()
-                        : ElevatedButton(
-                            onPressed: () async {
-                              setStateInDialog(() {
-                                isLoadingDialog = true;
-                                dialogErrorMessage = null;
-                              });
-
-                              if (_nameController.text.isEmpty ||
-                                  _priceController.text.isEmpty ||
-                                  _currencyController.text.isEmpty) {
-                                setStateInDialog(() {
-                                  dialogErrorMessage = 'Nama, Harga, dan Mata Uang wajib diisi.';
-                                  isLoadingDialog = false;
-                                });
-                                return;
-                              }
-                              if (double.tryParse(_priceController.text) == null) {
-                                setStateInDialog(() {
-                                  dialogErrorMessage = 'Harga harus berupa angka valid.';
-                                  isLoadingDialog = false;
-                                });
-                                return;
-                              }
-                              if (_currentArtisanProfileId == null) {
-                                setStateInDialog(() {
-                                  dialogErrorMessage = 'ID Profil Pengrajin tidak ditemukan. Mohon login ulang.';
-                                  isLoadingDialog = false;
-                                });
-                                return;
-                              }
-
-                              try {
-                                Map<String, dynamic> result;
-                                if (isEditing) {
-                                  if (productToEdit!.id == null) {
-                                    throw Exception('Product ID is null for editing.');
-                                  }
-                                  result = await _productService.updateProduct(
-                                    productToEdit.id!,
-                                    name: _nameController.text,
-                                    description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
-                                    price: double.parse(_priceController.text),
-                                    currency: _currencyController.text,
-                                    mainImageUrl: _mainImageUrlController.text.isEmpty ? null : _mainImageUrlController.text,
-                                    category: _categoryController.text.isEmpty ? null : _categoryController.text,
-                                    stockQuantity: int.tryParse(_stockQuantityController.text),
-                                    isAvailable: _isAvailable,
-                                  );
-                                } else {
-                                  result = await _productService.createProduct(
-                                    _currentArtisanProfileId!,
-                                    name: _nameController.text,
-                                    description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
-                                    price: double.parse(_priceController.text),
-                                    currency: _currencyController.text,
-                                    mainImageUrl: _mainImageUrlController.text.isEmpty ? null : _mainImageUrlController.text,
-                                    category: _categoryController.text.isEmpty ? null : _categoryController.text,
-                                    stockQuantity: int.tryParse(_stockQuantityController.text),
-                                    isAvailable: _isAvailable,
-                                  );
-                                }
-
-                                if (result['success']) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(result['message'])),
-                                  );
-                                  Navigator.of(dialogContext).pop();
-                                  _fetchProducts(); // Refresh daftar produk
-                                } else {
-                                  setStateInDialog(() {
-                                    dialogErrorMessage = result['message'] ?? 'Gagal menyimpan produk.';
-                                  });
-                                }
-                              } catch (e) {
-                                setStateInDialog(() {
-                                  dialogErrorMessage = 'Error API: $e';
-                                });
-                              } finally {
-                                setStateInDialog(() {
-                                  isLoadingDialog = false;
-                                });
-                              }
-                            },
-                            child: Text(buttonText),
-                          ),
-                  ],
-                ),
-              ),
-              actions: <Widget>[
-                TextButton(
-                  child: const Text('Batal'),
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop();
-                  },
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  // Menampilkan dialog konfirmasi penghapusan produk
-  Future<void> _showDeleteConfirmationDialog(product productToDelete) async {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Hapus Produk'),
-          content: Text('Apakah Anda yakin ingin menghapus produk "${productToDelete.name}"?'),
+          title: const Text('Confirm Delete'),
+          content: const Text('Are you sure you want to delete this product?'),
           actions: <Widget>[
             TextButton(
-              child: const Text('Batal'),
+              child: const Text('Cancel'),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop(false); // User canceled
               },
             ),
-            ElevatedButton(
-              onPressed: () async {
-                if (productToDelete.id != null) {
-                  final result = await _productService.deleteProduct(productToDelete.id!);
-                  if (result['success']) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(result['message'])),
-                    );
-                    Navigator.of(context).pop(); // Tutup dialog konfirmasi
-                    _fetchProducts(); // Refresh daftar produk
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(result['message'] ?? 'Gagal menghapus produk.')),
-                    );
-                  }
-                }
+            TextButton(
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(true); // User confirmed
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-              child: const Text('Hapus'),
             ),
           ],
         );
       },
-    );
+    ) ?? false; // Default to false if dialog is dismissed
+
+    if (!confirmDelete) {
+      return; // Do nothing if user canceled
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final result = await _productService.deleteProduct(productId);
+      if (result['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
+        _fetchProducts(); // Refresh the list
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Failed to delete product')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting product: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manajemen Produk'),
+        title: const Text(
+          'Manajemen Produk',
+          style: TextStyle(
+            color: Colors.black,
+            fontFamily: "jakarta-sans",
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Tambah Produk',
-            onPressed: () => _showProductFormDialog(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh Daftar',
-            onPressed: _fetchProducts,
+            icon: const Icon(Icons.add, color: Color(0xFF4300FF)),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddEditProductScreen(
+                    artisanId: widget.artisanId,
+                  ),
+                ),
+              );
+              if (result == true) {
+                _fetchProducts(); // Refresh if a product was added/edited
+              }
+            },
           ),
         ],
       ),
@@ -426,110 +152,106 @@ class _ProductScreenState extends State<ProductScreen> {
                     padding: const EdgeInsets.all(16.0),
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(color: Colors.red, fontSize: 16),
+                      style: const TextStyle(color: Colors.red, fontSize: 16, fontFamily: "jakarta-sans"),
                       textAlign: TextAlign.center,
                     ),
                   ),
                 )
               : _products.isEmpty
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.category, size: 80, color: Colors.grey),
-                          SizedBox(height: 20),
-                          Text(
-                            'Anda belum memiliki produk. Ketuk ikon + untuk menambahkannya.',
-                            style: TextStyle(fontSize: 18, color: Colors.grey),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    )
+                  ? const Center(child: Text('Belum ada produk yang ditambahkan.', style: TextStyle(fontFamily: "jakarta-sans"),))
                   : ListView.builder(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(16.0),
                       itemCount: _products.length,
                       itemBuilder: (context, index) {
-                        final product = _products[index];
+                        final productItem = _products[index];
                         return Card(
                           margin: const EdgeInsets.symmetric(vertical: 8.0),
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           child: Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(12.0),
                             child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Gambar Produk
-                                SizedBox(
+                                // Product Image (placeholder for now)
+                                Container(
                                   width: 80,
                                   height: 80,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    child: product.main_image_url != null && product.main_image_url!.isNotEmpty
-                                        ? Image.network(
-                                            product.main_image_url!,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(8),
+                                    image: productItem.main_image_url != null && productItem.main_image_url!.isNotEmpty
+                                        ? DecorationImage(
+                                            image: NetworkImage(productItem.main_image_url!),
                                             fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) =>
-                                                const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                                            onError: (exception, stackTrace) {
+                                              // Handle image loading errors, show a placeholder
+                                              print('Error loading image: $exception');
+                                            },
                                           )
-                                        : const Icon(Icons.image, size: 50, color: Colors.grey),
+                                        : null,
                                   ),
+                                  child: (productItem.main_image_url == null || productItem.main_image_url!.isEmpty)
+                                      ? const Icon(Icons.image, size: 40, color: Colors.grey)
+                                      : null,
                                 ),
-                                const SizedBox(width: 12.0),
-                                // Detail Produk
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        product.name ?? 'Nama Produk Tidak Diketahui',
+                                        productItem.name ?? 'Nama Produk Tidak Diketahui',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 18.0,
+                                          fontSize: 16,
+                                          fontFamily: "jakarta-sans",
                                         ),
-                                        maxLines: 1,
+                                        maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
+                                      const SizedBox(height: 4),
                                       Text(
-                                        '${product.currency ?? ''} ${product.price?.toStringAsFixed(2) ?? '-'}',
+                                        '${productItem.currency ?? ''} ${productItem.price?.toStringAsFixed(2) ?? 'N/A'}',
                                         style: TextStyle(
                                           color: Theme.of(context).primaryColor,
-                                          fontSize: 16.0,
-                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: "jakarta-sans",
                                         ),
                                       ),
                                       Text(
-                                        'Stok: ${product.stock_quantity ?? '-'} | Kategori: ${product.category ?? '-'}',
-                                        style: TextStyle(color: Colors.grey[700], fontSize: 14.0),
-                                      ),
-                                      Text(
-                                        product.is_available == true ? 'Tersedia' : 'Tidak Tersedia',
+                                        'Stok: ${productItem.stock_quantity ?? 'N/A'}',
                                         style: TextStyle(
-                                          color: product.is_available == true ? Colors.green : Colors.red,
-                                          fontStyle: FontStyle.italic,
-                                          fontSize: 13.0,
+                                          color: Colors.grey[600],
+                                          fontSize: 12,
+                                          fontFamily: "jakarta-sans",
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                // Tombol Aksi (selalu muncul di sini karena ini manajemen produk sendiri)
                                 Column(
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () {
-                                        _showProductFormDialog(productToEdit: product); // Panggil dialog dengan produk untuk edit
+                                      onPressed: () async {
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => AddEditProductScreen(
+                                              artisanId: widget.artisanId,
+                                              productToEdit: productItem,
+                                            ),
+                                          ),
+                                        );
+                                        if (result == true) {
+                                          _fetchProducts(); // Refresh after edit
+                                        }
                                       },
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () {
-                                        _showDeleteConfirmationDialog(product);
-                                      },
+                                      onPressed: () => _deleteProduct(productItem.id!),
                                     ),
                                   ],
                                 ),
@@ -540,17 +262,5 @@ class _ProductScreenState extends State<ProductScreen> {
                       },
                     ),
     );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _priceController.dispose();
-    _currencyController.dispose();
-    _mainImageUrlController.dispose();
-    _categoryController.dispose();
-    _stockQuantityController.dispose();
-    super.dispose();
   }
 }

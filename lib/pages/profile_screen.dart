@@ -1,4 +1,6 @@
+import 'package:artisanhub11/pages/artisanprofile.dart';
 import 'package:artisanhub11/pages/auth/login.dart';
+import 'package:artisanhub11/pages/product_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/userService.dart';
 import '../services/artisanService.dart';
@@ -7,6 +9,8 @@ import '../model/userModel.dart';
 import '../model/artisanModel.dart';
 import '../routes/Routenames.dart';
 import 'edit_profile_user_screen.dart';
+
+import 'product_screen.dart'; // Import the new ProductManagementScreen
 import '../theme/theme.dart'; // Import your theme for text styles
 
 class ProfileScreen extends StatefulWidget {
@@ -104,7 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       (Route<dynamic> route) => false,
     );
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('You have been logged out.')),
+      const SnackBar(content: Text('Anda telah keluar.')),
     );
   }
 
@@ -113,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'My Profile',
+          'Profil Saya',
           style: TextStyle(
             color: Colors.black, // Dark text color for app bar title
             fontFamily: "jakarta-sans", // Apply custom font
@@ -123,7 +127,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         centerTitle: true,
         backgroundColor: Colors.transparent, // Transparent background
         elevation: 0, // No shadow
-        // Leading back button typically provided by Scaffold automatically if pushed
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -139,7 +142,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 )
               : _userProfile == null
-                  ? const Center(child: Text('No user profile data.', style: TextStyle(fontFamily: "jakarta-sans"),))
+                  ? const Center(child: Text('Tidak ada data profil pengguna.', style: TextStyle(fontFamily: "jakarta-sans"),))
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -217,9 +220,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 30),
 
+                          // Artisan Profile Section (Conditional)
+                          if (_userRole == 'artisan' && _artisanProfile != null) ...[
+                            Text(
+                              'Profil Pengrajin',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[700],
+                                fontFamily: "jakarta-sans",
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildSupportListItem(
+                              icon: Icons.business_center_outlined, // Ikon untuk profil pengrajin
+                              text: 'Detail Profil Pengrajin Anda',
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ArtisanProfileDetailScreen(artisanProfile: _artisanProfile!),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 10), // Spacing between Artisan Profile and Products
+                            _buildSupportListItem(
+                              icon: Icons.shopping_bag_outlined, // Icon for products
+                              text: 'Produk Saya',
+                              onTap: () {
+                                if (_artisanProfile?.id != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ProductManagementScreen(
+                                        artisanId: _artisanProfile!.id!,
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('ID Artisan tidak ditemukan untuk mengelola produk.')),
+                                  );
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 30),
+                          ],
+
                           // Support Section Header
                           Text(
-                            'Support',
+                            'Dukungan',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -232,23 +283,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           // Help List Item
                           _buildSupportListItem(
                             icon: Icons.help_outline,
-                            text: 'Help',
+                            text: 'Bantuan',
                             onTap: () {
                               // Navigate to Help Screen or show help dialog
-                              print('Help tapped');
+                              print('Bantuan diklik');
                             },
                           ),
-                          // Logout List Item
-                          _buildSupportListItem(
-                            icon: Icons.logout,
-                            text: 'Logout',
-                            onTap: _logout, // Call the logout function
-                            isLogout: true, // For specific styling (red color)
-                          ),
-                          // The design doesn't show artisan-specific profile details
-                          // or other action buttons directly on this screen.
-                          // If those are needed, they might be in a separate 'Edit Profile' screen
-                          // or accessed via the main 'Home' tab for artisans.
                         ],
                       ),
                     ),

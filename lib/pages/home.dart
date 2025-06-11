@@ -1,3 +1,4 @@
+import 'package:artisanhub11/pages/about_us_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -65,6 +66,10 @@ class _HomepageState extends State<Homepage> {
         icon: Icon(Icons.chat_bubble_outline), // Assuming chat/message icon for suggestions
         label: 'Suggestions',
       ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.info_outline), // New icon for developer profile/about us
+        label: 'About Us',
+      ),
       // Keep other items if they might be used elsewhere, but not in main nav for now
       BottomNavigationBarItem(
         icon: Icon(Icons.settings),
@@ -81,8 +86,10 @@ class _HomepageState extends State<Homepage> {
       _HomeContent(userRole: _userRole), // Pass role to _HomeContent
       const ProfileScreen(),
       const SuggestionsFeedbackScreen(),
+      const AboutUsScreen(),
       const SettingsScreen(),
       const EventsScreen(),
+
     ];
 
     // Clear current lists
@@ -98,7 +105,8 @@ class _HomepageState extends State<Homepage> {
 
     _currentWidgetOptions.add(_allWidgetOptions[2]); // Suggestions (Widget) - mapped to chat icon
     _currentBottomNavBarItems.add(_allBottomNavBarItems[2]); // Suggestions (BottomNavigationBarItem)
-
+    _currentWidgetOptions.add(_allWidgetOptions[3]); // AboutUsScreen (Widget)
+    _currentBottomNavBarItems.add(_allBottomNavBarItems[3]);
     // Admin-specific items (not in main nav, but example)
     // if (_userRole == 'admin') {
     //   _currentWidgetOptions.add(_allWidgetOptions[4]); // Events (Widget)
@@ -112,6 +120,17 @@ class _HomepageState extends State<Homepage> {
     });
   }
 
+  // Fungsi untuk menangani proses logout
+  Future<void> _handleLogout() async {
+    await AuthManager.clearAuthData(); // Hapus data autentikasi
+    if (mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        Routenames.login, // Arahkan ke halaman login
+        (Route<dynamic> route) => false, // Hapus semua rute sebelumnya
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_userRole == null) {
@@ -121,26 +140,29 @@ class _HomepageState extends State<Homepage> {
     }
 
     return Scaffold(
-      // AppBar is removed as per design
-      body: Stack( // Using Stack to place "homepage" text at top-left
-        children: [
-          IndexedStack(
-            index: _selectedIndex,
-            children: _currentWidgetOptions,
+      appBar: AppBar( // Mengembalikan AppBar
+        title: Text(
+          'Homepage',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey[600],
+            fontFamily: "jakarta-sans", // Apply custom font
           ),
-          Positioned(
-            top: 40, // Adjust position as needed
-            left: 20, // Adjust position as needed
-            child: Text(
-              'homepage',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[600], // Adjust color to match design
-              ),
-            ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _handleLogout,
+            tooltip: 'Logout',
           ),
         ],
+        backgroundColor: Colors.white, // Sesuaikan dengan desain Anda
+        elevation: 0, // Hapus bayangan AppBar
+      ),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _currentWidgetOptions,
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: _currentBottomNavBarItems,

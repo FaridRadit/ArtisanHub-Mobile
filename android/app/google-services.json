@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "105491527791",
+    "project_id": "artisanhub-9a42d",
+    "storage_bucket": "artisanhub-9a42d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:105491527791:android:554e74eaa78e8fb649f59a",
+        "android_client_info": {
+          "package_name": "com.example.artisanhub11"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9LUnIxbcIdo5f4CK6UJmwNHEWmjSgkbQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

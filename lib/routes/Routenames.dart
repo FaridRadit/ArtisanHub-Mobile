@@ -1,3 +1,4 @@
+// lib/routes/Routenames.dart
 
 class Routenames {
   static const String home = '/home';
@@ -7,5 +8,5 @@ class Routenames {
   static const String events = '/events';
   static const String editProfileUser = '/editProfileUser';
   static const String wrapper = '/wrapper';
-
+  static const String aboutUs = '/aboutUs'; 
 }
