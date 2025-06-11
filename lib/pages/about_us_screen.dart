@@ -8,6 +8,7 @@ class AboutUsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('About Us'),
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0), // Padding sesuai desain
@@ -52,7 +53,7 @@ class AboutUsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Our Team',
+              'Developer',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 fontFamily: "jakarta-sans",
@@ -68,7 +69,7 @@ class AboutUsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'John Doe',
+                      'Farid Radityo Suharman',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         fontFamily: "jakarta-sans",
@@ -76,7 +77,7 @@ class AboutUsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'CEO & Founder',
+                      '123220094',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                         fontFamily: "jakarta-sans",
@@ -84,7 +85,7 @@ class AboutUsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'John has a passion for traditional crafts and a vision to bring artisans into the digital age.',
+                      'Farid has a passion for traditional crafts and a vision to bring artisans into the digital age.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontFamily: "jakarta-sans",
                       ),

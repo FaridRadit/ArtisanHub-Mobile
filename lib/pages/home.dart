@@ -1,3 +1,4 @@
+// lib/pages/home.dart
 import 'package:artisanhub11/pages/about_us_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -10,10 +11,10 @@ import '../theme/theme.dart';
 
 // Import screens (assuming these paths are correct)
 import './auth/login.dart';
-import './events_screen.dart'; // Still potentially used for admin, but not in main nav
+import './events_screen.dart';
 import './profile_screen.dart';
-import './settings_screen.dart'; // Not in main nav as per design, but kept if needed elsewhere
-import './suggestions_feedback_screen.dart'; // Mapped to the third icon
+import './settings_screen.dart';
+import './suggestions_feedback_screen.dart';
 
 import '../services/artisanService.dart';
 import '../model/artisanModel.dart';
@@ -36,13 +37,13 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   int _selectedIndex = 0;
-  String? _userRole; // To store user role
+  String? _userRole; // Untuk menyimpan peran pengguna
 
-  // List of all possible widgets (pages)
+  // Daftar semua widget (halaman) yang mungkin
   late List<Widget> _allWidgetOptions;
   late List<BottomNavigationBarItem> _allBottomNavBarItems;
 
-  // List of widgets and nav bar items to be displayed based on role
+  // Daftar widget dan item bilah navigasi yang akan ditampilkan berdasarkan peran
   List<Widget> _currentWidgetOptions = [];
   List<BottomNavigationBarItem> _currentBottomNavBarItems = [];
 
@@ -55,7 +56,7 @@ class _HomepageState extends State<Homepage> {
   Future<void> _initializeHomepage() async {
     _userRole = await AuthManager.getUserRole();
     _buildNavigationItems();
-    setState(() {}); // Rebuild to reflect user role and navigation items
+    setState(() {}); // Bangun ulang untuk mencerminkan peran pengguna dan item navigasi
   }
 
   void _buildNavigationItems() {
@@ -108,6 +109,16 @@ class _HomepageState extends State<Homepage> {
     _currentBottomNavBarItems.add(_allBottomNavBarItems[2]);
     _currentWidgetOptions.add(_allWidgetOptions[3]);
     _currentBottomNavBarItems.add(_allBottomNavBarItems[3]);
+
+    // Jika Anda ingin mengatur item navigasi lainnya berdasarkan peran, lakukan di sini
+    // Contoh: Admin bisa melihat EventsScreen
+    if (_userRole == 'admin') { // Ganti 'admin' dengan peran admin Anda
+      _currentWidgetOptions.add(_allWidgetOptions[5]); // EventsScreen
+      _currentBottomNavBarItems.add(_allBottomNavBarItems[5]); // Events item
+    }
+    // Jika Anda ingin settings juga ada di bottom nav
+    _currentWidgetOptions.add(_allWidgetOptions[4]); // SettingsScreen
+    _currentBottomNavBarItems.add(_allBottomNavBarItems[4]); // Settings item
   }
 
   void _onItemTapped(int index) {
@@ -136,24 +147,24 @@ class _HomepageState extends State<Homepage> {
 
     return Scaffold(
       appBar: AppBar(
+        // Menghilangkan tombol kembali dengan mengatur leading menjadi null
+        leading: null, // <-- Perubahan di sini
+        automaticallyImplyLeading: false, // <-- Menghilangkan tombol kembali secara otomatis
         title: Text(
           'Homepage',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[600],
-            fontFamily: "jakarta-sans",
+          style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+            color: Theme.of(context).appBarTheme.foregroundColor,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: Icon(Icons.logout, color: Theme.of(context).appBarTheme.foregroundColor),
             onPressed: _handleLogout,
             tooltip: 'Logout',
           ),
         ],
-        backgroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        elevation: Theme.of(context).appBarTheme.elevation,
       ),
       body: IndexedStack(
         index: _selectedIndex,
@@ -162,14 +173,14 @@ class _HomepageState extends State<Homepage> {
       bottomNavigationBar: BottomNavigationBar(
         items: _currentBottomNavBarItems,
         currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF4300FF),
-        unselectedItemColor: Colors.grey[400],
+        selectedItemColor: Theme.of(context).bottomNavigationBarTheme.selectedItemColor,
+        unselectedItemColor: Theme.of(context).bottomNavigationBarTheme.unselectedItemColor,
         onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
+        type: Theme.of(context).bottomNavigationBarTheme.type,
+        backgroundColor: Theme.of(context).bottomNavigationBarTheme.backgroundColor,
+        elevation: Theme.of(context).bottomNavigationBarTheme.elevation,
+        showSelectedLabels: Theme.of(context).bottomNavigationBarTheme.showSelectedLabels,
+        showUnselectedLabels: Theme.of(context).bottomNavigationBarTheme.showUnselectedLabels,
       ),
     );
   }
@@ -185,7 +196,7 @@ class _HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<_HomeContent> {
-  LatLng _markerLocation = const LatLng(-7.7956, 110.3695); // Default location (Yogyakarta)
+  LatLng _markerLocation = const LatLng(-7.7956, 110.3695); // Lokasi default (Yogyakarta)
   final ArtisanService _artisanService = ArtisanService();
   final MapController _mapController = MapController();
   artisan? _currentArtisanProfile;
@@ -204,22 +215,22 @@ class _HomeContentState extends State<_HomeContent> {
   bool _isSearchingArtisans = false;
   String? _artisanSearchErrorMessage;
 
-  // User's current location
+  // Lokasi pengguna saat ini
   LatLng? _userCurrentLocation;
   bool _isGettingUserLocation = false;
   String? _userLocationErrorMessage;
 
-  // Magnetometer related variables
+  // Variabel terkait magnetometer
   StreamSubscription? _magnetometerSubscription;
-  double _northHeading = 0.0; // Current heading relative to true north (0-360 degrees)
+  double _northHeading = 0.0; // Arah saat ini relatif terhadap utara sejati (0-360 derajat)
 
-  // Artisan's location and bearing
+  // Lokasi dan bearing artisan
   LatLng? _selectedArtisanLocation; // Menyimpan lokasi pengrajin yang dipilih
-  double _bearingToArtisan = 0.0; // Bearing dari user ke pengrajin yang dipilih
-  VoidCallback? _dialogSetState; // Store the setState callback for the dialog
+  double _bearingToArtisan = 0.0; // Bearing dari pengguna ke pengrajin yang dipilih
+  VoidCallback? _dialogSetState; // Menyimpan callback setState untuk dialog
 
-  // Tolerance for "correct" direction (in degrees)
-  final double _directionTolerance = 10.0; // +/- 10 degrees from target bearing
+  // Toleransi untuk arah "benar" (dalam derajat)
+  final double _directionTolerance = 10.0; // +/- 10 derajat dari bearing target
 
   @override
   void initState() {
@@ -241,9 +252,8 @@ class _HomeContentState extends State<_HomeContent> {
             final double headingRadians = atan2(event.x, event.y);
             _northHeading = ((headingRadians * 180 / pi) + 360) % 360;
 
-            // If dialog is open, update its state
             if (_dialogSetState != null) {
-              _dialogSetState!(); // Trigger rebuild for the dialog
+              _dialogSetState!();
             }
           });
         }
@@ -267,14 +277,14 @@ class _HomeContentState extends State<_HomeContent> {
     var status = await Permission.locationWhenInUse.request();
     if (status.isDenied) {
       setState(() {
-        _userLocationErrorMessage = 'Location permission denied.';
+        _userLocationErrorMessage = 'Izin lokasi ditolak.';
         _isGettingUserLocation = false;
       });
       return;
     }
     if (status.isPermanentlyDenied) {
       setState(() {
-        _userLocationErrorMessage = 'Location permission permanently denied. Please enable it in settings.';
+        _userLocationErrorMessage = 'Izin lokasi ditolak secara permanen. Harap aktifkan di pengaturan.';
         _isGettingUserLocation = false;
       });
       openAppSettings();
@@ -294,7 +304,7 @@ class _HomeContentState extends State<_HomeContent> {
       });
     } catch (e) {
       setState(() {
-        _userLocationErrorMessage = 'Failed to get current location: $e';
+        _userLocationErrorMessage = 'Gagal mendapatkan lokasi saat ini: $e';
         _isGettingUserLocation = false;
       });
     }
@@ -315,14 +325,14 @@ class _HomeContentState extends State<_HomeContent> {
         });
       } else {
         setState(() {
-          _artisanSearchErrorMessage = result['message'] ?? 'Failed to load artisans.';
+          _artisanSearchErrorMessage = result['message'] ?? 'Gagal memuat pengrajin.';
           _allArtisansForMap = [];
           _foundArtisans = [];
         });
       }
     } catch (e) {
       setState(() {
-        _artisanSearchErrorMessage = 'An error occurred while loading artisans: $e';
+        _artisanSearchErrorMessage = 'Terjadi kesalahan saat memuat pengrajin: $e';
         _allArtisansForMap = [];
         _foundArtisans = [];
       });
@@ -340,7 +350,7 @@ class _HomeContentState extends State<_HomeContent> {
     try {
       final userId = await AuthManager.getUserId();
       if (userId == null) {
-        print('User ID not found for fetching artisan profile.');
+        print('ID Pengguna tidak ditemukan untuk mengambil profil pengrajin.');
         return;
       }
 
@@ -349,7 +359,7 @@ class _HomeContentState extends State<_HomeContent> {
       if (artisanByIdResult['success']) {
         fetchedArtisan = artisanByIdResult['data'];
       } else {
-        print('getArtisanById failed for user ID $userId. Trying getAllArtisans...');
+        print('getArtisanById gagal untuk ID pengguna $userId. Mencoba getAllArtisans...');
         final allArtisansResult = await _artisanService.getAllArtisans(limit: 100);
         if (allArtisansResult['success'] && allArtisansResult['data'] is List) {
           List<artisan> allArtisans = allArtisansResult['data'];
@@ -358,7 +368,7 @@ class _HomeContentState extends State<_HomeContent> {
             orElse: () => null!,
           );
           if (fetchedArtisan == null) {
-            print('No artisan profile found matching user_id $userId in all artisans.');
+            print('Tidak ada profil pengrajin yang cocok dengan user_id $userId di semua pengrajin.');
           }
         }
       }
@@ -381,8 +391,8 @@ class _HomeContentState extends State<_HomeContent> {
 
   Future<void> _showCreateArtisanProfileDialog() async {
     final bool isEditing = _currentArtisanProfile != null;
-    final String dialogTitle = isEditing ? 'Edit Artisan Profile' : 'Create Artisan Profile';
-    final String buttonText = isEditing ? 'Save Changes' : 'Create Profile';
+    final String dialogTitle = isEditing ? 'Edit Profil Pengrajin' : 'Buat Profil Pengrajin';
+    final String buttonText = isEditing ? 'Simpan Perubahan' : 'Buat Profil';
 
     if (isEditing) {
       _bioController.text = _currentArtisanProfile!.bio ?? '';
@@ -410,54 +420,60 @@ class _HomeContentState extends State<_HomeContent> {
         return StatefulBuilder(
           builder: (context, setStateInDialog) {
             return AlertDialog(
-              title: Text(dialogTitle),
+              title: Text(dialogTitle, style: Theme.of(context).textTheme.titleLarge),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Text(
-                      'Selected Location: Lat ${_markerLocation.latitude.toStringAsFixed(4)}, Lon ${_markerLocation.longitude.toStringAsFixed(4)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      'Lokasi Terpilih: Lat ${_markerLocation.latitude.toStringAsFixed(4)}, Lon ${_markerLocation.longitude.toStringAsFixed(4)}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: _bioController,
-                      decoration: const InputDecoration(labelText: 'Bio (Optional)', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(labelText: 'Bio (Opsional)', border: OutlineInputBorder()),
                       maxLines: 2,
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _expertiseCategoryController,
-                      decoration: const InputDecoration(labelText: 'Expertise Category*', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(labelText: 'Kategori Keahlian*', border: OutlineInputBorder()),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _addressController,
-                      decoration: const InputDecoration(labelText: 'Address*', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(labelText: 'Alamat*', border: OutlineInputBorder()),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _contactEmailController,
-                      decoration: const InputDecoration(labelText: 'Contact Email (Optional)', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(labelText: 'Email Kontak (Opsional)', border: OutlineInputBorder()),
                       keyboardType: TextInputType.emailAddress,
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _contactPhoneController,
-                      decoration: const InputDecoration(labelText: 'Contact Phone (Optional)', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(labelText: 'Telepon Kontak (Opsional)', border: OutlineInputBorder()),
                       keyboardType: TextInputType.phone,
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _websiteUrlController,
-                      decoration: const InputDecoration(labelText: 'Website URL (Optional)', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(labelText: 'URL Situs Web (Opsional)', border: OutlineInputBorder()),
                       keyboardType: TextInputType.url,
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 16),
                     if (dialogErrorMessage != null)
                       Text(
                         dialogErrorMessage!,
-                        style: const TextStyle(color: Colors.red),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
                       ),
                     const SizedBox(height: 16),
                     isLoading
@@ -471,7 +487,7 @@ class _HomeContentState extends State<_HomeContent> {
 
                               if (_expertiseCategoryController.text.isEmpty || _addressController.text.isEmpty) {
                                 setStateInDialog(() {
-                                  dialogErrorMessage = 'Expertise Category and Address are required.';
+                                  dialogErrorMessage = 'Kategori Keahlian dan Alamat wajib diisi.';
                                   isLoading = false;
                                 });
                                 return;
@@ -513,12 +529,12 @@ class _HomeContentState extends State<_HomeContent> {
                                   _fetchAllArtisansForMapAndList();
                                 } else {
                                   setStateInDialog(() {
-                                    dialogErrorMessage = result['message'] ?? 'Failed to save profile.';
+                                    dialogErrorMessage = result['message'] ?? 'Gagal menyimpan profil.';
                                   });
                                 }
                               } catch (e) {
                                 setStateInDialog(() {
-                                  dialogErrorMessage = 'API Error: $e';
+                                  dialogErrorMessage = 'Kesalahan API: $e';
                                 });
                               } finally {
                                 setStateInDialog(() {
@@ -526,14 +542,14 @@ class _HomeContentState extends State<_HomeContent> {
                                 });
                               }
                             },
-                            child: Text(buttonText),
+                            child: Text(buttonText, style: Theme.of(context).elevatedButtonTheme.style?.textStyle?.resolve({})?.copyWith(color: Theme.of(context).elevatedButtonTheme.style?.foregroundColor?.resolve({}))),
                           ),
                   ],
                 ),
               ),
               actions: <Widget>[
                 TextButton(
-                  child: const Text('Cancel'),
+                  child: Text('Batal', style: Theme.of(context).textButtonTheme.style?.textStyle?.resolve({})),
                   onPressed: () {
                     Navigator.of(dialogContext).pop();
                   },
@@ -547,33 +563,29 @@ class _HomeContentState extends State<_HomeContent> {
   }
 
   Future<void> _showArtisanDetailDialog(artisan selectedArtisan) async {
-    // Update selected artisan location for compass on map
     _selectedArtisanLocation = LatLng(selectedArtisan.latitude!, selectedArtisan.longitude!);
 
     return showDialog<void>(
       context: context,
-      barrierDismissible: true, // Allow dismissing by tapping outside
+      barrierDismissible: true,
       builder: (BuildContext dialogContext) {
-        // Assign the setState function of the dialog's StatefulBuilder
-        // This allows the parent _HomeContentState to trigger updates in this dialog.
         _dialogSetState = () {
-          if (mounted) { // Ensure the parent widget is still mounted
-            // Use markNeedsBuild to trigger a rebuild of the dialog's content
+          if (mounted) {
             (dialogContext as Element).markNeedsBuild();
           }
         };
 
         return AlertDialog(
-          title: Text(selectedArtisan.user?.fullName ?? selectedArtisan.user?.username ?? 'Artisan Details'),
+          title: Text(selectedArtisan.user?.fullName ?? selectedArtisan.user?.username ?? 'Detail Pengrajin', style: Theme.of(context).textTheme.titleLarge),
           content: SingleChildScrollView(
-            child: StatefulBuilder( // Keep StatefulBuilder here to manage dialog's internal state
+            child: StatefulBuilder(
               builder: (BuildContext context, StateSetter setStateInDialog) {
-                String distanceInfo = 'Calculating distance...';
+                String distanceInfo = 'Menghitung jarak...';
                 String bearingInfo = '';
                 String directionInfo = '';
                 String guidanceText = '';
-                Color guidanceColor = Colors.black;
-                IconData guidanceIcon = Icons.help_outline; // Default icon
+                Color guidanceColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+                IconData guidanceIcon = Icons.help_outline;
 
                 double relativeBearing = 0.0;
                 bool isFacingCorrectly = false;
@@ -585,7 +597,7 @@ class _HomeContentState extends State<_HomeContent> {
                     selectedArtisan.latitude!,
                     selectedArtisan.longitude!,
                   );
-                  distanceInfo = 'Distance: ${(distanceInMeters / 1000).toStringAsFixed(2)} km';
+                  distanceInfo = 'Jarak: ${(distanceInMeters / 1000).toStringAsFixed(2)} km';
 
                   _bearingToArtisan = Geolocator.bearingBetween(
                     _userCurrentLocation!.latitude,
@@ -594,89 +606,81 @@ class _HomeContentState extends State<_HomeContent> {
                     selectedArtisan.longitude!,
                   );
 
-                  bearingInfo = 'Bearing to Artisan (from North): ${_bearingToArtisan.toStringAsFixed(1)}°';
+                  bearingInfo = 'Bearing ke Pengrajin (dari Utara): ${_bearingToArtisan.toStringAsFixed(1)}°';
 
                   relativeBearing = (_bearingToArtisan - _northHeading + 360) % 360;
-                  directionInfo = 'Artisan is ${relativeBearing.toStringAsFixed(1)}° relative to your current heading (${_getCardinalDirection(relativeBearing)})';
+                  directionInfo = 'Pengrajin berada ${relativeBearing.toStringAsFixed(1)}° relatif terhadap arah Anda saat ini (${_getCardinalDirection(relativeBearing)})';
 
-                  // Determine guidance
                   if (relativeBearing >= (360 - _directionTolerance) || relativeBearing <= _directionTolerance) {
-                    // Facing roughly forward
                     isFacingCorrectly = true;
-                    guidanceText = 'Go Straight!';
+                    guidanceText = 'Lurus!';
                     guidanceColor = Colors.green;
                     guidanceIcon = Icons.arrow_upward;
                   } else if (relativeBearing > _directionTolerance && relativeBearing < 180) {
-                    // Need to turn right
-                    guidanceText = 'Turn Right';
+                    guidanceText = 'Belok Kanan';
                     guidanceColor = Colors.orange;
                     guidanceIcon = Icons.turn_right;
                   } else {
-                    // Need to turn left
-                    guidanceText = 'Turn Left';
+                    guidanceText = 'Belok Kiri';
                     guidanceColor = Colors.orange;
                     guidanceIcon = Icons.turn_left;
                   }
                 } else if (_userLocationErrorMessage != null) {
-                  distanceInfo = 'Location error: $_userLocationErrorMessage';
-                  guidanceText = 'Cannot get your location.';
+                  distanceInfo = 'Kesalahan lokasi: $_userLocationErrorMessage';
+                  guidanceText = 'Tidak dapat mendapatkan lokasi Anda.';
                   guidanceColor = Colors.red;
                 } else if (_isGettingUserLocation) {
-                  distanceInfo = 'Getting your location...';
-                  guidanceText = 'Getting your location...';
+                  distanceInfo = 'Mendapatkan lokasi Anda...';
+                  guidanceText = 'Mendapatkan lokasi Anda...';
                   guidanceColor = Colors.blue;
                 } else {
-                  distanceInfo = 'Your location not available.';
-                  guidanceText = 'Location services off or no artisan selected.';
+                  distanceInfo = 'Lokasi Anda tidak tersedia.';
+                  guidanceText = 'Layanan lokasi mati atau tidak ada pengrajin yang dipilih.';
                   guidanceColor = Colors.grey;
                 }
 
                 return ListBody(
                   children: <Widget>[
-                    Text('Bio: ${selectedArtisan.bio ?? '-'}'),
-                    Text('Category: ${selectedArtisan.expertise_category ?? '-'}'),
-                    Text('Address: ${selectedArtisan.address ?? '-'}'),
-                    Text('Email: ${selectedArtisan.contact_email ?? '-'}'),
-                    Text('Phone: ${selectedArtisan.contact_phone ?? '-'}'),
-                    Text('Website: ${selectedArtisan.website_url ?? '-'}'),
-                    Text('Rating: ${selectedArtisan.avg_rating?.toStringAsFixed(1) ?? '-'}'),
-                    Text('Reviews: ${selectedArtisan.total_reviews ?? '-'}'),
-                    Text('Verified: ${selectedArtisan.is_verified == true ? 'Yes' : 'No'}'),
-                    Text('Lat: ${selectedArtisan.latitude?.toStringAsFixed(4) ?? '-'}, Lon: ${selectedArtisan.longitude?.toStringAsFixed(4) ?? '-'}'),
+                    Text('Bio: ${selectedArtisan.bio ?? '-'}', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Kategori: ${selectedArtisan.expertise_category ?? '-'}', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Alamat: ${selectedArtisan.address ?? '-'}', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Email: ${selectedArtisan.contact_email ?? '-'}', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Telepon: ${selectedArtisan.contact_phone ?? '-'}', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Situs Web: ${selectedArtisan.website_url ?? '-'}', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Peringkat: ${selectedArtisan.avg_rating?.toStringAsFixed(1) ?? '-'}', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Ulasan: ${selectedArtisan.total_reviews ?? '-'}', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Terverifikasi: ${selectedArtisan.is_verified == true ? 'Ya' : 'Tidak'}', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Lat: ${selectedArtisan.latitude?.toStringAsFixed(4) ?? '-'}, Lon: ${selectedArtisan.longitude?.toStringAsFixed(4) ?? '-'}', style: Theme.of(context).textTheme.bodyMedium),
                     const Divider(),
-                    Text(distanceInfo, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text(bearingInfo, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text(directionInfo, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text('Your Device Heading (North): ${_northHeading.toStringAsFixed(1)}°', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(distanceInfo, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(bearingInfo, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(directionInfo, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    Text('Arah Perangkat Anda (Utara): ${_northHeading.toStringAsFixed(1)}°', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
 
-                    // Visual Kompas dan Indikator Arah
                     Center(
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Background Circle (optional, for visual flair)
                           Container(
                             width: 100,
                             height: 100,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: guidanceColor.withOpacity(0.2), // Light background color
+                              color: guidanceColor.withOpacity(0.2),
                               border: Border.all(color: guidanceColor, width: 2),
                             ),
                           ),
-                          // Rotating Compass Icon
                           Transform.rotate(
-                            angle: (_userCurrentLocation != null && selectedArtisan.latitude != null && selectedArtisan.longitude != null)
-                                ? ((_bearingToArtisan - _northHeading) * pi / 180) // Rotate to point to artisan
-                                : 0, // No rotation if no target
+                            angle: (_userCurrentLocation != null && _selectedArtisanLocation != null)
+                                ? ((_bearingToArtisan - _northHeading) * pi / 180)
+                                : 0,
                             child: Icon(
-                              Icons.navigation, // Compass icon
+                              Icons.navigation,
                               size: 80,
-                              color: guidanceColor, // Color based on guidance
+                              color: guidanceColor,
                             ),
                           ),
-                          // Guidance Icon on top (e.g., arrow for go straight, turn left/right)
                           Icon(
                             guidanceIcon,
                             size: 40,
@@ -689,18 +693,17 @@ class _HomeContentState extends State<_HomeContent> {
                     Center(
                       child: Text(
                         guidanceText,
-                        style: TextStyle(
-                          fontSize: 18,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: guidanceColor,
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const Center(
+                    Center(
                       child: Text(
-                        'Keep walking straight when the icon is green and points up!',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        'Tetap lurus saat ikon hijau dan menunjuk ke atas!',
+                        style: Theme.of(context).textTheme.bodySmall,
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -711,9 +714,9 @@ class _HomeContentState extends State<_HomeContent> {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Close'),
+              child: Text('Tutup', style: Theme.of(context).textButtonTheme.style?.textStyle?.resolve({})),
               onPressed: () {
-                _dialogSetState = null; // Clear the dialog's setState callback
+                _dialogSetState = null;
                 Navigator.of(dialogContext).pop();
               },
             ),
@@ -721,28 +724,27 @@ class _HomeContentState extends State<_HomeContent> {
         );
       },
     ).then((_) {
-      // Ensure _dialogSetState is null if dialog is dismissed (e.g., by tapping outside)
       _dialogSetState = null;
     });
   }
 
   String _getCardinalDirection(double degrees) {
     if (degrees >= 337.5 || degrees < 22.5) {
-      return 'N (North)';
+      return 'N (Utara)';
     } else if (degrees >= 22.5 && degrees < 67.5) {
-      return 'NE (Northeast)';
+      return 'NE (Timur Laut)';
     } else if (degrees >= 67.5 && degrees < 112.5) {
-      return 'E (East)';
+      return 'E (Timur)';
     } else if (degrees >= 112.5 && degrees < 157.5) {
-      return 'SE (Southeast)';
+      return 'SE (Tenggara)';
     } else if (degrees >= 157.5 && degrees < 202.5) {
-      return 'S (South)';
+      return 'S (Selatan)';
     } else if (degrees >= 202.5 && degrees < 247.5) {
-      return 'SW (Southwest)';
+      return 'SW (Barat Daya)';
     } else if (degrees >= 247.5 && degrees < 292.5) {
-      return 'W (West)';
+      return 'W (Barat)';
     } else if (degrees >= 292.5 && degrees < 337.5) {
-      return 'NW (Northwest)';
+      return 'NW (Barat Laut)';
     }
     return '';
   }
@@ -775,7 +777,7 @@ class _HomeContentState extends State<_HomeContent> {
       _foundArtisans = filteredList;
       _isSearchingArtisans = false;
       if (_foundArtisans.isEmpty) {
-        _artisanSearchErrorMessage = 'No artisans found for "${query}".';
+        _artisanSearchErrorMessage = 'Tidak ada pengrajin ditemukan untuk "${query}".';
       }
     });
   }
@@ -786,7 +788,7 @@ class _HomeContentState extends State<_HomeContent> {
 
   @override
   Widget build(BuildContext context) {
-    String welcomeName = 'Artisan';
+    String welcomeName = 'Artisan'; // Anda bisa mendapatkan nama asli dari AuthManager jika disimpan
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -798,21 +800,15 @@ class _HomeContentState extends State<_HomeContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Welcome, $welcomeName',
-                style: const TextStyle(
-                  fontSize: 24,
+                'Selamat Datang, $welcomeName',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontFamily: "jakarta-sans"
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                  fontFamily: "jakarta-sans"
-                ),
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
               if (widget.userRole == 'artisan')
                 Padding(
@@ -834,8 +830,8 @@ class _HomeContentState extends State<_HomeContent> {
                             child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
                           )
                         : Text(
-                            _currentArtisanProfile != null ? 'Edit Artisan Profile' : 'Create Artisan Profile',
-                            style: const TextStyle(fontFamily: "jakarta-sans"),
+                            _currentArtisanProfile != null ? 'Edit Profil Pengrajin' : 'Buat Profil Pengrajin',
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.white),
                           ),
                   ),
                 ),
@@ -856,7 +852,7 @@ class _HomeContentState extends State<_HomeContent> {
                   onTap: (tapPosition, latlng) async {
                     setState(() {
                       _markerLocation = latlng;
-                      _selectedArtisanLocation = null; // Clear selected artisan when tapping map
+                      _selectedArtisanLocation = null;
                     });
                     if (widget.userRole == 'artisan' && !_isLoadingArtisanProfile) {
                       await Future.delayed(const Duration(milliseconds: 100));
@@ -871,7 +867,6 @@ class _HomeContentState extends State<_HomeContent> {
                   ),
                   MarkerLayer(
                     markers: [
-                      // User's current location marker
                       if (_userCurrentLocation != null)
                         Marker(
                           point: _userCurrentLocation!,
@@ -887,26 +882,23 @@ class _HomeContentState extends State<_HomeContent> {
                                         _selectedArtisanLocation!.latitude,
                                         _selectedArtisanLocation!.longitude,
                                       ) - _northHeading) * pi / 180)
-                                    : -_northHeading * (pi / 180), // Default to point North
+                                    : -_northHeading * (pi / 180),
                                 child: Icon(
-                                  Icons.navigation, // Icon untuk arah pengguna
-                                  color: Theme.of(context).primaryColor, // Warna primer aplikasi
+                                  Icons.navigation,
+                                  color: Theme.of(context).primaryColor,
                                   size: 40,
                                 ),
                               ),
                               Text(
-                                'Your Direction',
-                                style: TextStyle(
+                                'Arah Anda',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: Theme.of(context).primaryColor,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 10,
-                                  fontFamily: "jakarta-sans"
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      // Marker lokasi yang dipilih (bisa lokasi artisan atau lokasi tap di peta)
                       Marker(
                         point: _markerLocation,
                         width: 80,
@@ -917,7 +909,6 @@ class _HomeContentState extends State<_HomeContent> {
                           size: 40,
                         ),
                       ),
-                      // Artisan markers
                       ..._allArtisansForMap.where((artisan) => artisan.latitude != null && artisan.longitude != null).map((artisan) {
                         return Marker(
                           point: LatLng(artisan.latitude!, artisan.longitude!),
@@ -927,7 +918,7 @@ class _HomeContentState extends State<_HomeContent> {
                             onTap: () {
                               setState(() {
                                 _markerLocation = LatLng(artisan.latitude!, artisan.longitude!);
-                                _selectedArtisanLocation = LatLng(artisan.latitude!, artisan.longitude!); // Set selected artisan location
+                                _selectedArtisanLocation = LatLng(artisan.latitude!, artisan.longitude!);
                                 if (_userCurrentLocation != null) {
                                   _bearingToArtisan = Geolocator.bearingBetween(
                                     _userCurrentLocation!.latitude,
@@ -947,11 +938,9 @@ class _HomeContentState extends State<_HomeContent> {
                                 Icon(Icons.location_on, color: Theme.of(context).primaryColor, size: 30),
                                 Text(
                                   artisan.user?.username ?? '',
-                                  style: TextStyle(
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: Theme.of(context).primaryColor,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 10,
-                                    fontFamily: "jakarta-sans"
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
@@ -974,26 +963,17 @@ class _HomeContentState extends State<_HomeContent> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              labelText: 'Search here ...',
-              labelStyle: TextStyle(color: Colors.grey[400], fontFamily: "jakarta-sans"),
-              suffixIcon: const Icon(Icons.search, color: Colors.grey),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFF4300FF), width: 1.5),
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+              labelText: 'Cari di sini ...',
+              labelStyle: Theme.of(context).inputDecorationTheme.labelStyle,
+              suffixIcon: Icon(Icons.search, color: Theme.of(context).inputDecorationTheme.hintStyle?.color),
+              filled: Theme.of(context).inputDecorationTheme.filled,
+              fillColor: Theme.of(context).inputDecorationTheme.fillColor,
+              border: Theme.of(context).inputDecorationTheme.border,
+              enabledBorder: Theme.of(context).inputDecorationTheme.enabledBorder,
+              focusedBorder: Theme.of(context).inputDecorationTheme.focusedBorder,
+              contentPadding: Theme.of(context).inputDecorationTheme.contentPadding,
             ),
-            style: const TextStyle(fontFamily: "jakarta-sans"),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
         const SizedBox(height: 10),
@@ -1007,12 +987,12 @@ class _HomeContentState extends State<_HomeContent> {
                     ? Center(
                         child: Text(
                           _artisanSearchErrorMessage!,
-                          style: const TextStyle(color: Colors.red, fontFamily: "jakarta-sans"),
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.red),
                           textAlign: TextAlign.center,
                         ),
                       )
                     : _foundArtisans.isEmpty
-                        ? const Center(child: Text('No artisans found.', style: TextStyle(fontFamily: "jakarta-sans"),))
+                        ? Center(child: Text('Tidak ada pengrajin ditemukan.', style: Theme.of(context).textTheme.bodyLarge))
                         : ListView.builder(
                             padding: EdgeInsets.zero,
                             itemCount: _foundArtisans.length,
@@ -1020,18 +1000,15 @@ class _HomeContentState extends State<_HomeContent> {
                               final artisan = _foundArtisans[index];
                               return Card(
                                 margin: const EdgeInsets.symmetric(vertical: 6),
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  side: BorderSide(color: Colors.grey[200]!, width: 1),
-                                ),
-                                color: Colors.white,
+                                elevation: Theme.of(context).cardTheme.elevation,
+                                shape: Theme.of(context).cardTheme.shape,
+                                color: Theme.of(context).cardColor,
                                 child: InkWell(
-                                  borderRadius: BorderRadius.circular(10),
+                                  // borderRadius: Theme.of(context).cardTheme.shape?.borderRadius,
                                   onTap: () {
                                     setState(() {
                                       _markerLocation = LatLng(artisan.latitude!, artisan.longitude!);
-                                      _selectedArtisanLocation = LatLng(artisan.latitude!, artisan.longitude!); // Set selected artisan location
+                                      _selectedArtisanLocation = LatLng(artisan.latitude!, artisan.longitude!);
                                       if (_userCurrentLocation != null) {
                                         _bearingToArtisan = Geolocator.bearingBetween(
                                           _userCurrentLocation!.latitude,
@@ -1056,7 +1033,7 @@ class _HomeContentState extends State<_HomeContent> {
                                               ? NetworkImage(artisan.user!.profile_picture_url!)
                                               : null,
                                           child: artisan.user?.profile_picture_url == null || artisan.user!.profile_picture_url!.isEmpty
-                                              ? const Icon(Icons.person, size: 25, color: Colors.grey)
+                                              ? Icon(Icons.person, size: 25, color: Theme.of(context).textTheme.bodyMedium?.color)
                                               : null,
                                         ),
                                         const SizedBox(width: 12),
@@ -1065,22 +1042,16 @@ class _HomeContentState extends State<_HomeContent> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                artisan.user?.fullName ?? artisan.user?.username ?? 'Unnamed Artisan',
-                                                style: const TextStyle(
+                                                artisan.user?.fullName ?? artisan.user?.username ?? 'Pengrajin Tanpa Nama',
+                                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                  fontFamily: "jakarta-sans"
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                               Text(
-                                                'Artisan',
-                                                style: TextStyle(
-                                                  color: Colors.grey[600],
-                                                  fontSize: 14,
-                                                  fontFamily: "jakarta-sans"
-                                                ),
+                                                'Pengrajin',
+                                                style: Theme.of(context).textTheme.bodyMedium,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -1089,14 +1060,14 @@ class _HomeContentState extends State<_HomeContent> {
                                                   children: [
                                                     const Icon(Icons.star, color: Colors.amber, size: 16),
                                                     Text('${artisan.avg_rating!.toStringAsFixed(1)} (${artisan.total_reviews ?? 0})',
-                                                      style: const TextStyle(fontFamily: "jakarta-sans"),
+                                                      style: Theme.of(context).textTheme.bodySmall,
                                                     ),
                                                   ],
                                                 ),
                                             ],
                                           ),
                                         ),
-                                        const Icon(Icons.location_searching, size: 24, color: Color(0xFF4300FF)),
+                                        Icon(Icons.location_searching, size: 24, color: Theme.of(context).colorScheme.primary),
                                       ],
                                     ),
                                   ),

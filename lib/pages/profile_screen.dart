@@ -118,12 +118,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: const Text(
           'Profil Saya',
+          
           style: TextStyle(
             color: Colors.black, // Dark text color for app bar title
             fontFamily: "jakarta-sans", // Apply custom font
             fontWeight: FontWeight.bold,
           ),
+          
+          
         ),
+        automaticallyImplyLeading: false,
         centerTitle: true,
         backgroundColor: Colors.transparent, // Transparent background
         elevation: 0, // No shadow
@@ -333,8 +337,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-              if (!isLogout) // No arrow for logout as per design
-                const Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
+            // No arrow for logout as per design
+                // const Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
             ],
           ),
         ),

@@ -1,3 +1,4 @@
+// lib/pages/suggestions_feedback_screen.dart
 
 import 'package:flutter/material.dart';
 import '../theme/theme.dart'; // Import your custom theme for font consistency
@@ -10,14 +11,15 @@ class SuggestionsFeedbackScreen extends StatefulWidget {
 }
 
 class _SuggestionsFeedbackScreenState extends State<SuggestionsFeedbackScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _subjectController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
-  String? _feedbackType; // 'Suggestion' or 'Bug Report'
+  // FINAL TEKS SARAN DAN KESAN
+  final String _kesanMobileProgramming =
+      "Mata kuliah Teknologi dan Pemrograman Mobile memberikan pemahaman mendalam tentang pengembangan aplikasi modern, mulai dari konsep dasar hingga implementasi fitur kompleks. Materi yang disampaikan sangat relevan dengan kebutuhan industri saat ini, dan project-based learning membantu kami mengaplikasikan teori secara langsung. Ini adalah fondasi yang kuat untuk karir di bidang pengembangan mobile.";
 
-  bool _isLoading = false;
-  String? _statusMessage;
-  bool _isSuccess = false;
+  final String _kesanUntukPakBagus =
+      "Untuk Bapak Bagus, terima kasih atas bimbingan dan pengajaran yang sangat inspiratif. Penjelasan yang jelas, kesabaran dalam menjawab pertanyaan, dan dorongan untuk terus bereksplorasi menjadikan proses belajar sangat menyenangkan dan efektif. Pendekatan pengajaran Bapak yang praktis sangat membantu kami memahami konsep-konsep sulit dengan lebih mudah.";
+
+  final String _saranUmum =
+      "Sebagai saran, mungkin bisa ditambahkan sesi lebih lanjut mengenai integrasi dengan layanan cloud pihak ketiga (misalnya Firebase atau AWS Amplify) untuk manajemen database real-time dan otentikasi. Diskusi tentang optimasi performa aplikasi dan praktik terbaik dalam pengujian (testing) juga akan sangat bermanfaat.";
 
   // State untuk emoji yang dipilih
   String _selectedEmoji = '😐';
@@ -25,48 +27,10 @@ class _SuggestionsFeedbackScreenState extends State<SuggestionsFeedbackScreen> {
   Color _selectedEmojiColor = Colors.yellow; // Warna default untuk netral
   Color _selectedEmojiBorderColor = Colors.yellow; // Warna border default untuk netral
 
-  void _submitFeedback() async {
-    if (_formKey.currentState!.validate()) {
-      if (_feedbackType == null) {
-        setState(() {
-          _statusMessage = 'Harap pilih jenis umpan balik.';
-          _isSuccess = false;
-        });
-        return;
-      }
+  // Tidak ada lagi _formKey, _subjectController, _messageController karena tidak ada form input
+  // Tidak ada lagi _isLoading, _statusMessage, _isSuccess karena tidak ada submit form
 
-      setState(() {
-        _isLoading = true;
-        _statusMessage = null;
-        _isSuccess = false;
-      });
-
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() {
-        _isLoading = false;
-        _isSuccess = true;
-        _statusMessage = 'Terima kasih atas $_selectedEmojiLabel Anda! Kami menghargai umpan balik Anda.';
-        _subjectController.clear();
-        _messageController.clear();
-        _feedbackType = null;
-        _selectedEmoji = '😐'; // Reset emoji
-        _selectedEmojiLabel = 'Netral';
-        _selectedEmojiColor = Colors.yellow;
-        _selectedEmojiBorderColor = Colors.yellow;
-      });
-
-      // Optionally show a SnackBar
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Umpan balik berhasil dikirim!', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white))),
-        );
-      }
-    }
-  }
-
-  // Method untuk memilih emoji
+  // Method untuk memilih emoji (tetap ada karena terkait visual)
   void _selectEmoji(String emoji, String label, Color emojiColor, Color borderColor) {
     setState(() {
       _selectedEmoji = emoji;
@@ -78,7 +42,7 @@ class _SuggestionsFeedbackScreenState extends State<SuggestionsFeedbackScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Ambil custom boxShadow dari tema
+
     final customBoxShadow = Theme.of(context).extension<CustomBoxShadowExtension>()?.boxShadow ?? [];
 
     return Scaffold(
@@ -96,21 +60,13 @@ class _SuggestionsFeedbackScreenState extends State<SuggestionsFeedbackScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Umpan Balik', // Change to Bahasa Indonesia
+                    'Umpan Balik',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.black, // Dark color for Feedback title
-                      // fontFamily sudah diatur di tema utama
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.more_vert),
-                    color: Colors.grey,
-                    onPressed: () {
-                      // Handle menu icon tap
-                      print('Feedback menu tapped');
-                    },
-                  ),
+                  
                 ],
               ),
             ),
@@ -121,10 +77,9 @@ class _SuggestionsFeedbackScreenState extends State<SuggestionsFeedbackScreen> {
               child: Column(
                 children: [
                   Text(
-                    'Nilai Pengalaman', // Change to Bahasa Indonesia
+                    'Nilai Pengalaman',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Colors.grey[600],
-                      // fontFamily sudah diatur di tema utama
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -141,7 +96,7 @@ class _SuggestionsFeedbackScreenState extends State<SuggestionsFeedbackScreen> {
                     child: Center(
                       child: Text(
                         _selectedEmoji, // Selected emoji
-                        style: const TextStyle(fontSize: 60), // Emoji itself
+                        style: const TextStyle(fontSize: 60),
                       ),
                     ),
                   ),
@@ -181,22 +136,82 @@ class _SuggestionsFeedbackScreenState extends State<SuggestionsFeedbackScreen> {
             ),
             const SizedBox(height: 40), // Spacing before text block
 
-            // Lorem Ipsum Text Block
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 0.0), // Disesuaikan padding
-              child: Text(
-                'Masukan Anda sangat berharga bagi kami. Kami berkomitmen untuk terus meningkatkan kualitas layanan. Silakan bagikan pengalaman Anda dengan kami.', // Bahasa Indonesia
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[700],
-                  // fontFamily sudah diatur di tema utama
+            // === BAGIAN TEKS KESAN DAN SARAN ===
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start, // Sesuaikan alignment
+              children: [
+                Text(
+                  'Kesan tentang Mata Kuliah:',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
+                const SizedBox(height: 8),
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      _kesanMobileProgramming,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey[700],
+                      ),
+                      textAlign: TextAlign.justify, // Agar teks rata kanan-kiri
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                Text(
+                  'Kesan untuk Pak Bagus sebagai Dosen:',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      _kesanUntukPakBagus,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey[700],
+                      ),
+                      textAlign: TextAlign.justify,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                Text(
+                  'Saran Umum:',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      _saranUmum,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey[700],
+                      ),
+                      textAlign: TextAlign.justify,
+                    ),
+                  ),
+                ),
+              ],
             ),
+            // === AKHIR BAGIAN TEKS KESAN DAN SARAN ===
 
-            const SizedBox(height: 30), // Spacing before form fields
-
-          
+            const SizedBox(height: 30), // Spacing after text blocks
           ],
         ),
       ),
@@ -238,7 +253,6 @@ class _SuggestionsFeedbackScreenState extends State<SuggestionsFeedbackScreen> {
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey[600],
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              // fontFamily sudah diatur di tema utama
             ),
           ),
         ],
@@ -248,8 +262,7 @@ class _SuggestionsFeedbackScreenState extends State<SuggestionsFeedbackScreen> {
 
   @override
   void dispose() {
-    _subjectController.dispose();
-    _messageController.dispose();
+    // Tidak ada lagi controller yang perlu didispose karena form dihilangkan
     super.dispose();
   }
 }
