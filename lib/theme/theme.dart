@@ -1,69 +1,153 @@
+// lib/theme/theme.dart
+
 import 'package:flutter/material.dart';
 
-class AppTheme {
-  static final ThemeData lightTheme = ThemeData(
-    brightness: Brightness.light,
-    primaryColor: Colors.blue, // You can make this the primary blue color from your design
-    colorScheme: ColorScheme.light(
-      primary: const Color(0xFF4300FF), // Primary blue for buttons etc.
-      secondary: Colors.amber, // Secondary accent color
+// Definisi warna kustom Anda
+const Color primaryBlue = Color(0xFF2D9CDB);
+const Color lightGreyAccent = Color(0xFFE0E0E0); // Contoh abu-abu terang
+
+final ThemeData appTheme = ThemeData(
+  useMaterial3: true, // Mengaktifkan Material Design 3
+  fontFamily: 'JakartaSans', // Menggunakan font JakartaSans sebagai default
+  colorScheme: ColorScheme.light(
+    primary: primaryBlue,
+    onPrimary: Colors.white,
+    secondary: lightGreyAccent,
+    onSecondary: Colors.black87,
+    surface: Colors.white,
+    onSurface: Colors.black87,
+    background: const Color(0xFFF5F5F5), // Warna latar belakang yang lebih halus
+    onBackground: Colors.black87,
+    error: Colors.red,
+    onError: Colors.white,
+  ),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Colors.white, // AppBar putih
+    foregroundColor: Colors.black87, // Warna teks dan ikon di AppBar
+    elevation: 0, // Tanpa bayangan
+    centerTitle: true,
+    titleTextStyle: TextStyle(
+      fontFamily: 'JakartaSans',
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+      color: Colors.black87,
     ),
-    scaffoldBackgroundColor: Colors.white, // Default background for most screens
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.transparent, // Set to transparent for designs without a solid app bar
-      foregroundColor: Colors.black, // Default text color for app bar content
-      elevation: 0, // No shadow for app bar
-      centerTitle: true,
+  ),
+  cardTheme: CardThemeData(
+    elevation: 4, // Bayangan halus
+    shadowColor: Colors.grey.withOpacity(0.2), // Warna bayangan yang halus
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16), // Sudut membulat
     ),
-    textTheme: const TextTheme(
-      // Apply 'jakarta-sans' to various text styles globally
-      bodyLarge: TextStyle(fontFamily: 'jakarta-sans', fontSize: 16),
-      bodyMedium: TextStyle(fontFamily: 'jakarta-sans', fontSize: 14),
-      titleLarge: TextStyle(fontFamily: 'jakarta-sans', fontWeight: FontWeight.bold, fontSize: 20),
-      // You can define other text styles here like headlineLarge, displaySmall, etc.
-    ).apply(
-      // Fallback font for all text styles if not explicitly set above
-      fontFamily: 'jakarta-sans'
+    margin: EdgeInsets.zero, // Default margin nol, atur secara manual di widget
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: primaryBlue, // Warna utama tombol
+      foregroundColor: Colors.white, // Warna teks tombol
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16), // Sudut membulat
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      elevation: 4, // Bayangan tombol
+      shadowColor: primaryBlue.withOpacity(0.3),
+      textStyle: const TextStyle(
+        fontFamily: 'JakartaSans',
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+      ),
     ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF4300FF), // The blue color from your design for main buttons
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10), // Apply rounded corners
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: primaryBlue, // Warna teks tombol
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16), // Sudut membulat
+      ),
+      textStyle: const TextStyle(
+        fontFamily: 'JakartaSans',
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  ),
+  inputDecorationTheme: InputDecorationTheme(
+    filled: true,
+    fillColor: Colors.white, // Latar belakang TextField putih
+    contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16), // Sudut membulat
+      borderSide: BorderSide.none, // Tanpa border
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide.none,
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(color: primaryBlue, width: 2), // Border fokus biru
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(color: Colors.red, width: 2),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(color: Colors.red, width: 2),
+    ),
+    labelStyle: TextStyle(
+      fontFamily: 'JakartaSans',
+      color: Colors.grey[600],
+    ),
+    hintStyle: TextStyle(
+      fontFamily: 'JakartaSans',
+      color: Colors.grey[400],
+    ),
+  ),
+  bottomNavigationBarTheme: BottomNavigationBarThemeData(
+    backgroundColor: Colors.white,
+    selectedItemColor: primaryBlue,
+    unselectedItemColor: Colors.grey[400],
+    type: BottomNavigationBarType.fixed,
+    elevation: 8, // Bayangan halus
+    showSelectedLabels: false,
+    showUnselectedLabels: false,
+    selectedIconTheme: const IconThemeData(size: 28),
+    unselectedIconTheme: const IconThemeData(size: 24),
+  ),
+  // Tambahkan Box Shadow untuk komponen Container yang mungkin membutuhkan
+  extensions: <ThemeExtension<dynamic>>[
+    CustomBoxShadowExtension( // Ubah _CustomBoxShadowExtension menjadi CustomBoxShadowExtension
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.2),
+          spreadRadius: 2,
+          blurRadius: 8,
+          offset: const Offset(0, 4), // Bayangan ke bawah
         ),
-        textStyle: const TextStyle(fontFamily: 'jakarta-sans', fontSize: 18, fontWeight: FontWeight.bold),
-      ),
+      ],
     ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: const Color(0xFF4300FF), // Example color for outlined button
-        side: const BorderSide(color: Color(0xFF4300FF)), // Example border color
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        textStyle: const TextStyle(fontFamily: 'jakarta-sans'),
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: const Color(0xFFCACACA), // Light grey background like in design
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide.none, // No border visible in design for default state
-      ),
-      enabledBorder: OutlineInputBorder( // State when TextField is enabled but not focused
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder( // State when TextField is focused
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xFF4300FF), width: 1.5), // Focus border
-      ),
-      labelStyle: TextStyle(color: Colors.grey[600], fontFamily: 'jakarta-sans'),
-      hintStyle: TextStyle(color: Colors.grey[400], fontFamily: 'jakarta-sans'),
-      contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-      floatingLabelBehavior: FloatingLabelBehavior.never, // Labels stay as placeholders
-    ),
-  );
+  ],
+);
+
+// Custom ThemeExtension untuk Box Shadow, jika ingin menggunakannya di berbagai tempat
+class CustomBoxShadowExtension extends ThemeExtension<CustomBoxShadowExtension> { // Ubah _CustomBoxShadowExtension menjadi CustomBoxShadowExtension
+  final List<BoxShadow>? boxShadow;
+
+  const CustomBoxShadowExtension({this.boxShadow});
+
+  @override
+  ThemeExtension<CustomBoxShadowExtension> copyWith({List<BoxShadow>? boxShadow}) { // Ubah _CustomBoxShadowExtension menjadi CustomBoxShadowExtension
+    return CustomBoxShadowExtension(boxShadow: boxShadow ?? this.boxShadow); // Ubah _CustomBoxShadowExtension menjadi CustomBoxShadowExtension
+  }
+
+  @override
+  ThemeExtension<CustomBoxShadowExtension> lerp(covariant ThemeExtension<CustomBoxShadowExtension>? other, double t) { // Ubah _CustomBoxShadowExtension menjadi CustomBoxShadowExtension
+    if (other is! CustomBoxShadowExtension) { // Ubah _CustomBoxShadowExtension menjadi CustomBoxShadowExtension
+      return this;
+    }
+    return CustomBoxShadowExtension( // Ubah _CustomBoxShadowExtension menjadi CustomBoxShadowExtension
+      boxShadow: BoxShadow.lerpList(boxShadow, other.boxShadow, t),
+    );
+  }
 }

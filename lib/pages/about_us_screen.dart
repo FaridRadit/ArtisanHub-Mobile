@@ -1,6 +1,4 @@
-
 import 'package:flutter/material.dart';
-import '../theme/theme.dart'; 
 
 class AboutUsScreen extends StatelessWidget {
   const AboutUsScreen({super.key});
@@ -9,73 +7,123 @@ class AboutUsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'About Developer', // Changed title to "About Developer"
-          style: TextStyle(
-            color: Colors.black,
-            fontFamily: "jakarta-sans",
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-       
+        title: const Text('About Us'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(24.0), // Padding sesuai desain
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center, // Center the content
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            // Developer's Photo
-            CircleAvatar(
-              radius: 70,
-              backgroundImage: AssetImage('assets/images/Foto_profile.png'), // Replace with your image asset path
-              backgroundColor: Colors.grey[200], // Placeholder background
+            Center(
+              child: Image.asset(
+                'assets/images/Foto_profile.png', // Pastikan Anda memiliki logo ini di assets
+                height: 120,
+              ),
             ),
-            const SizedBox(height: 30),
-            // Developer's Name
+            const SizedBox(height: 24),
             Text(
-              'Farid Radityo Suharman', // Your Name
-              style: const TextStyle(
-                fontSize: 24,
+              'Welcome to ArtisanHub!',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 fontFamily: "jakarta-sans",
               ),
             ),
-            const SizedBox(height: 10),
-            // Developer's NIM
+            const SizedBox(height: 16),
             Text(
-              'NIM: 123220094', // Your NIM
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[700],
+              'ArtisanHub is a platform dedicated to connecting skilled artisans with customers who appreciate unique, handmade products. Our mission is to empower local artisans by providing them with a digital marketplace to showcase their creations and reach a wider audience.',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 fontFamily: "jakarta-sans",
               ),
             ),
-            const SizedBox(height: 10),
-            // Developer's Class
+            const SizedBox(height: 24),
             Text(
-              'Kelas: H', // Your Class
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[700],
+              'Our Vision',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
                 fontFamily: "jakarta-sans",
               ),
             ),
-            const SizedBox(height: 40),
-            // Optional: Add a brief description or motto
+            const SizedBox(height: 8),
             Text(
-              'This application was developed as a final project for Mobile Programming course. Aiming to connect artisans with customers and promote local craftsmanship.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
+              'To foster a thriving community where creativity flourishes, traditional craftsmanship is celebrated, and sustainable livelihoods are built.',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 fontFamily: "jakarta-sans",
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+            Text(
+              'Our Team',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontFamily: "jakarta-sans",
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Example Team Member Card
+            Card(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'John Doe',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: "jakarta-sans",
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'CEO & Founder',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                        fontFamily: "jakarta-sans",
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'John has a passion for traditional crafts and a vision to bring artisans into the digital age.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontFamily: "jakarta-sans",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Add more team member cards as needed
+            const SizedBox(height: 24),
+            Text(
+              'Contact Us',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontFamily: "jakarta-sans",
+              ),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: Icon(Icons.email, color: Theme.of(context).colorScheme.primary),
+              title: Text('info@artisanhub.com', style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontFamily: "jakarta-sans")),
+              onTap: () {
+                // Handle email tap
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.phone, color: Theme.of(context).colorScheme.primary),
+              title: Text('+123 456 7890', style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontFamily: "jakarta-sans")),
+              onTap: () {
+                // Handle phone tap
+              },
+            ),
+            const SizedBox(height: 24),
+            Center(
+              child: Text(
+                '© 2023 ArtisanHub. All rights reserved.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[500], fontFamily: "jakarta-sans"),
+              ),
+            ),
           ],
         ),
       ),

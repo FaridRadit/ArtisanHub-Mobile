@@ -56,7 +56,7 @@ class MyApp extends StatelessWidget {
         Routenames.wrapper: (context) => const AuthCheckWrapper(),
         Routenames.aboutUs: (context) => const AboutUsScreen(),
       },
-      theme: AppTheme.lightTheme,
+      theme: appTheme,
     );
   }
 }
